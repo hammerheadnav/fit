@@ -52,9 +52,10 @@ const (
 	compressedTimeMask         byte = 0x1F
 	compressedLocalMesgNumMask byte = 0x60
 
-	mesgDefinitionMask byte = 0x40
-	mesgHeaderMask     byte = 0x00
-	localMesgNumMask   byte = 0x0F
+	mesgDefinitionMask  byte = 0x40
+	developerFieldsMask byte = 0x20
+	mesgHeaderMask      byte = 0x00
+	localMesgNumMask    byte = 0x0F
 
 	maxLocalMesgs byte = localMesgNumMask + 1
 
