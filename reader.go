@@ -474,7 +474,9 @@ func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 			fd.size = d.tmp[(i*3)+1]
 			fd.index = d.tmp[(i*3)+2]
 			dm.devFieldDefs[i] = fd
-			d.opts.logger.Printf("parsed dev field=%v", fd)
+			if d.debug {
+				d.opts.logger.Printf("parsed dev field=%v", fd)
+			}
 		}
 	}
 
