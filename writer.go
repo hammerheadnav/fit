@@ -13,9 +13,16 @@ import (
 	"github.com/tormoder/fit/internal/types"
 )
 
-type encoder struct {
-	w    io.Writer
+type Encoder struct {
 	arch binary.ByteOrder
+	buf  *bytes.Buffer
+}
+
+func NewEncoder(arch binary.ByteOrder) *Encoder {
+	return &Encoder{
+		arch: arch,
+		buf:  &bytes.Buffer{},
+	}
 }
 
 func encodeString(str string, size byte) ([]byte, error) {
@@ -32,23 +39,23 @@ func encodeString(str string, size byte) ([]byte, error) {
 	return bstr, nil
 }
 
-func (e *encoder) encodeValue(value interface{}, f *field) error {
+func (e *Encoder) encodeValue(value interface{}, f *field) error {
 	switch f.t.Kind() {
 	case types.TimeUTC:
 		t := value.(time.Time)
 		u32 := encodeTime(t)
-		binary.Write(e.w, e.arch, u32)
+		binary.Write(e.buf, e.arch, u32)
 	case types.TimeLocal:
 		t := value.(time.Time)
 		_, offs := t.Zone()
 		u32 := uint32(int64(encodeTime(t)) + int64(offs))
-		binary.Write(e.w, e.arch, u32)
+		binary.Write(e.buf, e.arch, u32)
 	case types.Lat:
 		lat := value.(Latitude)
-		binary.Write(e.w, e.arch, lat.semicircles)
+		binary.Write(e.buf, e.arch, lat.semicircles)
 	case types.Lng:
 		lng := value.(Longitude)
-		binary.Write(e.w, e.arch, lng.semicircles)
+		binary.Write(e.buf, e.arch, lng.semicircles)
 	case types.NativeFit:
 		if f.t.BaseType() == types.BaseString {
 			str, ok := value.(string)
@@ -62,7 +69,7 @@ func (e *encoder) encodeValue(value interface{}, f *field) error {
 				return fmt.Errorf("can't encode %+v as UTF-8 string: %v", value, err)
 			}
 		}
-		binary.Write(e.w, e.arch, value)
+		binary.Write(e.buf, e.arch, value)
 	default:
 		return fmt.Errorf("unknown Fit type %+v", f.t)
 	}
@@ -70,7 +77,7 @@ func (e *encoder) encodeValue(value interface{}, f *field) error {
 	return nil
 }
 
-func (e *encoder) writeField(value reflect.Value, f *field) error {
+func (e *Encoder) writeField(value reflect.Value, f *field) error {
 	if !f.t.Array() {
 		return e.encodeValue(value.Interface(), f)
 	}
@@ -107,9 +114,9 @@ type encodeMesgDef struct {
 	fields        []*field
 }
 
-func (e *encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
+func (e *Encoder) writeMesg(mesg reflect.Value, def *encodeMesgDef) error {
 	hdr := def.localMesgNum & localMesgNumMask
-	err := binary.Write(e.w, e.arch, hdr)
+	err := binary.Write(e.buf, e.arch, hdr)
 	if err != nil {
 		return err
 	}
@@ -190,34 +197,34 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 	return def
 }
 
-func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
+func (e *Encoder) writeDefMesg(def *encodeMesgDef) error {
 	hdr := mesgDefinitionMask | (def.localMesgNum & localMesgNumMask)
-	err := binary.Write(e.w, e.arch, hdr)
+	err := binary.Write(e.buf, e.arch, hdr)
 	if err != nil {
 		return err
 	}
 
-	err = binary.Write(e.w, e.arch, byte(0))
+	err = binary.Write(e.buf, e.arch, byte(0))
 	if err != nil {
 		return err
 	}
 
 	switch e.arch {
 	case binary.LittleEndian:
-		err = binary.Write(e.w, e.arch, byte(0))
+		err = binary.Write(e.buf, e.arch, byte(0))
 	case binary.BigEndian:
-		err = binary.Write(e.w, e.arch, byte(1))
+		err = binary.Write(e.buf, e.arch, byte(1))
 	}
 	if err != nil {
 		return err
 	}
 
-	err = binary.Write(e.w, e.arch, def.globalMesgNum)
+	err = binary.Write(e.buf, e.arch, def.globalMesgNum)
 	if err != nil {
 		return err
 	}
 
-	err = binary.Write(e.w, e.arch, byte(len(def.fields)))
+	err = binary.Write(e.buf, e.arch, byte(len(def.fields)))
 	if err != nil {
 		return err
 	}
@@ -234,7 +241,7 @@ func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
 			fdef.size = fdef.size * f.length
 		}
 
-		err := binary.Write(e.w, e.arch, fdef)
+		err := binary.Write(e.buf, e.arch, fdef)
 		if err != nil {
 			return err
 		}
@@ -243,7 +250,7 @@ func (e *encoder) writeDefMesg(def *encodeMesgDef) error {
 	return nil
 }
 
-func (e *encoder) encodeDefAndDataMesg(mesg reflect.Value) error {
+func (e *Encoder) encodeDefAndDataMesg(mesg reflect.Value) error {
 	mesg = reflect.Indirect(mesg)
 	if !mesg.IsValid() {
 		return nil
@@ -266,7 +273,7 @@ func (e *encoder) encodeDefAndDataMesg(mesg reflect.Value) error {
 	return err
 }
 
-func (e *encoder) encodeFile(file reflect.Value) error {
+func (e *Encoder) encodeFile(file reflect.Value) error {
 	for i := 0; i < file.NumField(); i++ {
 		v := file.Field(i)
 		switch v.Kind() {
@@ -321,11 +328,7 @@ func (e *encoder) encodeFile(file reflect.Value) error {
 // Encode writes the given FIT file into the given Writer. file.CRC and
 // file.Header.CRC will be updated to the correct values.
 func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
-	buf := &bytes.Buffer{}
-	enc := &encoder{
-		w:    buf,
-		arch: arch,
-	}
+	e := NewEncoder(arch)
 
 	// XXX: Is there a better way to do this with reflection?
 	var data reflect.Value
@@ -437,28 +440,87 @@ func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
 	}
 
 	// Encode the data
-	err := enc.encodeDefAndDataMesg(reflect.ValueOf(file.FileId))
+	err := e.encodeDefAndDataMesg(reflect.ValueOf(file.FileId))
 	if err != nil {
 		return fmt.Errorf("encode failed: FileId: %v", err)
 	}
 
-	err = enc.encodeDefAndDataMesg(reflect.ValueOf(file.FileCreator))
+	err = e.encodeDefAndDataMesg(reflect.ValueOf(file.FileCreator))
 	if err != nil {
 		return fmt.Errorf("encode failed: FileCreator: %v", err)
 	}
 
-	err = enc.encodeDefAndDataMesg(reflect.ValueOf(file.TimestampCorrelation))
+	err = e.encodeDefAndDataMesg(reflect.ValueOf(file.TimestampCorrelation))
 	if err != nil {
 		return fmt.Errorf("encode failed: TimestampCorrelation: %v", err)
 	}
 
-	err = enc.encodeFile(data)
+	err = e.encodeFile(data)
 	if err != nil {
 		return fmt.Errorf("encode failed: %vFile: %v", file.Type(), err)
 	}
 
-	file.Header.DataSize = uint32(buf.Len())
-	hdr, err := file.Header.MarshalBinary()
+	return e.Write(file.Header, w)
+}
+
+// Write a single message
+func (e *Encoder) WriteMsg(msg interface{}) error {
+	err := e.encodeDefAndDataMesg(reflect.ValueOf(msg))
+	if err != nil {
+		return fmt.Errorf("encode failed: FileId: %v", err)
+	}
+	return nil
+}
+
+// Write a slice of messages of the same type
+func (e *Encoder) WriteMsgs(msgs interface{}) error {
+	v := reflect.ValueOf(msgs)
+	if v.Kind() != reflect.Slice {
+		return fmt.Errorf("encode failed: Expected slice: %v", v.Kind())
+	}
+
+	var def *encodeMesgDef
+	for j := 0; j < v.Len(); j++ {
+		v2 := reflect.Indirect(v.Index(j))
+
+		// Not necessary that the first message will have all defined fields that may appear in the following messages
+		// So we have to build a model first by iterating though all the message and collecting valid definition fields
+		if def == nil {
+			// map to collect field definitions
+			mfields := make(map[byte]*field)
+			for k := 0; k < v.Len(); k++ {
+				r := reflect.Indirect(v.Index(k))
+				def = getEncodeMesgDef(r, 0)
+				for _, f := range def.fields {
+					mfields[f.num] = f
+				}
+			}
+			// should not be nil at this point, but just in case
+			if def != nil {
+				def.fields = make([]*field, 0, len(mfields))
+				for _, f := range mfields {
+					def.fields = append(def.fields, f)
+				}
+				err := e.writeDefMesg(def)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("cannot create definition message for %+v", v.Interface())
+			}
+		}
+
+		err := e.writeMesg(v2, def)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Encoder) Write(header Header, w io.Writer) error {
+	header.DataSize = uint32(e.buf.Len())
+	hdr, err := header.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("encode failed: Header: %v", err)
 	}
@@ -471,12 +533,10 @@ func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
 		return fmt.Errorf("encode failed: header crc calc: %v", err)
 	}
 
-	_, err = crc.Write(buf.Bytes())
+	_, err = crc.Write(e.buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("encode failed: data crc calc: %v", err)
 	}
-
-	file.CRC = crc.Sum16()
 
 	// Write out the data
 	_, err = w.Write(hdr)
@@ -484,12 +544,12 @@ func Encode(w io.Writer, file *File, arch binary.ByteOrder) error {
 		return fmt.Errorf("encode failed: writing header: %v", err)
 	}
 
-	_, err = w.Write(buf.Bytes())
+	_, err = w.Write(e.buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("encode failed: writing data: %v", err)
 	}
 
-	err = binary.Write(w, binary.LittleEndian, file.CRC)
+	err = binary.Write(w, binary.LittleEndian, crc.Sum16())
 	if err != nil {
 		return fmt.Errorf("encode failed: writing crc: %v", err)
 	}
