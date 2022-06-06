@@ -472,11 +472,12 @@ func (e *Encoder) WriteMsg(msg interface{}) error {
 	return nil
 }
 
-// Write a slice of messages of the same type
+// Write a slice of messages which all use the same definition message
+// Note: all messages *must* be of the same type
 func (e *Encoder) WriteMsgs(msgs interface{}) error {
 	v := reflect.ValueOf(msgs)
 	if v.Kind() != reflect.Slice {
-		return fmt.Errorf("encode failed: Expected slice: %v", v.Kind())
+		return fmt.Errorf("encode failed: Expected reflect.Slice but got %v", v.Kind())
 	}
 
 	var def *encodeMesgDef
