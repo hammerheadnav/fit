@@ -479,6 +479,9 @@ func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 			ddfd.size = d.tmp[(i*3)+1]
 			ddfd.devDataIndex = d.tmp[(i*3)+2]
 			dm.devDataFieldDescs[i] = ddfd
+			if d.debug {
+				d.opts.logger.Printf("parsed developer field description: %v", ddfd)
+			}
 		}
 
 	}
@@ -702,6 +705,9 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 	for i, ddfd := range dm.devDataFieldDescs {
 		err := d.readFull(d.tmp[0:int(ddfd.size)])
+		if d.debug {
+			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp)
+		}
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
 		}
