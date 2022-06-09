@@ -321,6 +321,7 @@ type defmsg struct {
 	fields            byte
 	fieldDefs         []fieldDef
 	devDataFieldDescs []devDataFieldDesc
+	fieldDescMsgs     map[byte]FieldDescriptionMsg
 }
 
 func (dm defmsg) String() string {
@@ -706,7 +707,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	for i, ddfd := range dm.devDataFieldDescs {
 		err := d.readFull(d.tmp[0:int(ddfd.size)])
 		if d.debug {
-			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp)
+			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp[0:int(ddfd.size)])
 		}
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
@@ -715,6 +716,14 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 	if knownMsg && !msgv.IsValid() {
 		panic("internal decoder error: parse data fields: known message, but not (reflect) valid")
+	}
+
+	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
+		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
+		if d.debug {
+			d.opts.logger.Printf("found field desc msg to save %v", fieldMsg)
+		}
+		dm.fieldDescMsgs[fieldMsg.FieldDefinitionNumber] = fieldMsg
 	}
 
 	return msgv, nil
