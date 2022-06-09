@@ -718,12 +718,36 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		}
 		if msgv.Type() == reflect.TypeOf(RecordMsg{}) {
 			recordMsg := msgv.Interface().(RecordMsg)
+			value, err := d.parseDevField(dm, fieldDesc, ddfd)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+			var fieldName string
+			if len(fieldDesc.FieldName) > 0 {
+				fieldName = fieldDesc.FieldName[0]
+			} else {
+				fieldName = ""
+			}
+			var units string
+			if len(fieldDesc.Units) > 0 {
+				units = fieldDesc.Units[0]
+			} else {
+				units = ""
+			}
 
+			devField := DeveloperField{
+				DeveloperDataIndex:    fieldDesc.DeveloperDataIndex,
+				FieldDefinitionNumber: fieldDesc.FieldDefinitionNumber,
+				BaseTypeId:            uint8(fieldDesc.FitBaseTypeId),
+				FieldName:             fieldName,
+				Units:                 units,
+				Value:                 value,
+			}
+			recordMsg.DeveloperFields[fieldName] = devField
+			if d.debug {
+				d.opts.logger.Printf("successfully parsed dev field %v", devField)
+			}
 		}
-		// TODO: add dev fields entry in RecordMsg, keyed off name
-		// will need to have a properly instantiated reflect.Value{} or just have an any{}?
-		// then, will need to get the field from the RecordMsg and properly set it with the new value after decoding it
-		//fieldDesc.
 		if d.debug {
 			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp[0:int(ddfd.size)])
 		}
@@ -745,6 +769,50 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	}
 
 	return msgv, nil
+}
+
+func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (reflect.Value, error) {
+	dsize := int(devFieldDesc.size)
+	switch fieldDescMsg.FitBaseTypeId {
+	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
+		return reflect.ValueOf(uint64(d.tmp[0])), nil
+	case FitBaseTypeSint8:
+		return reflect.ValueOf(int64(d.tmp[0])), nil
+	case FitBaseTypeSint16:
+		i16 := int64(dm.arch.Uint16(d.tmp[:dsize]))
+		return reflect.ValueOf(i16), nil
+	case FitBaseTypeUint16, FitBaseTypeUint16z:
+		u16 := uint64(dm.arch.Uint16(d.tmp[:dsize]))
+		return reflect.ValueOf(u16), nil
+	case FitBaseTypeSint32:
+		i32 := int64(dm.arch.Uint32(d.tmp[:dsize]))
+		return reflect.ValueOf(i32), nil
+	case FitBaseTypeUint32, FitBaseTypeUint32z:
+		u32 := uint64(dm.arch.Uint32(d.tmp[:dsize]))
+		return reflect.ValueOf(u32), nil
+	case FitBaseTypeFloat32:
+		bits := dm.arch.Uint32(d.tmp[:dsize])
+		f32 := float64(math.Float32frombits(bits))
+		return reflect.ValueOf(f32), nil
+	case FitBaseTypeFloat64:
+		bits := dm.arch.Uint64(d.tmp[:dsize])
+		f64 := math.Float64frombits(bits)
+		return reflect.ValueOf(f64), nil
+	case FitBaseTypeString:
+		for j := 0; j < dsize; j++ {
+			if d.tmp[j] == 0x00 {
+				if j > 0 {
+					return reflect.ValueOf(string(d.tmp[:j])), nil
+				}
+				break
+			}
+			if j == dsize-1 {
+				return reflect.ValueOf(string(d.tmp[:j])), nil
+			}
+		}
+	}
+
+	return reflect.Value{}, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
 }
 
 func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
