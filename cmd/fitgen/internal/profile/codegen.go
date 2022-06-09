@@ -145,16 +145,37 @@ func (g *codeGenerator) genTypes(types map[string]*Type) {
 	}
 }
 
+func (g *codeGenerator) writeDeveloperFieldDefinitions() {
+	g.p()
+	g.p("type DeveloperField struct {")
+	g.p("DeveloperDataIndex uint8")
+	g.p("FieldDefinitionNumber uint8")
+	g.p("BaseTypeId uint8")
+	g.p("FieldName string")
+	g.p("Units string")
+	g.p("Value reflect.Value")
+	g.p("}")
+}
+
+func (g *codeGenerator) writeDeveloperFieldMember() {
+	g.p("DeveloperFields map[string]DeveloperField")
+}
+
 func (g *codeGenerator) genMsgs(msgs []*Msg) {
 	g.p("import (")
 	g.p("\"math\"")
+	g.p("\"reflect\"")
 	g.p("\"time\"")
 	g.p(")")
+
+	g.writeDeveloperFieldDefinitions()
+
 	for _, msg := range msgs {
 		g.p()
 		g.p("// ", msg.CCName, "Msg represents the ", msg.Name, " FIT message type.")
 		g.p("type ", msg.CCName, "Msg", " struct {")
 		scaledfs, dynfs, compfs, dyncompfs := g.genFields(msg)
+		g.writeDeveloperFieldMember()
 		g.p("}")
 		g.genConstructor(msg)
 		for _, scaledfi := range scaledfs {
@@ -209,6 +230,7 @@ func (g *codeGenerator) genConstructor(msg *Msg) {
 	for _, f := range msg.Fields {
 		g.p(f.CCName, ": ", f.FType.GoInvalidValue(), ",")
 	}
+	g.p("DeveloperFields: map[string]DeveloperField{},")
 	g.p("}")
 	g.p("}")
 }

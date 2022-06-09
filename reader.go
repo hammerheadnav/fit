@@ -706,11 +706,26 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 	for i, ddfd := range dm.devDataFieldDescs {
 		err := d.readFull(d.tmp[0:int(ddfd.size)])
-		if d.debug {
-			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp[0:int(ddfd.size)])
-		}
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
+		}
+		fieldDesc, ok := dm.fieldDescMsgs[ddfd.fieldNum]
+		if !ok {
+			if d.debug {
+				d.opts.logger.Printf("could not find dev field description for dev field #%d, bytes=%v", ddfd.fieldNum, d.tmp[0:int(ddfd.size)])
+			}
+			continue
+		}
+		if msgv.Type() == reflect.TypeOf(RecordMsg{}) {
+			recordMsg := msgv.Interface().(RecordMsg)
+
+		}
+		// TODO: add dev fields entry in RecordMsg, keyed off name
+		// will need to have a properly instantiated reflect.Value{} or just have an any{}?
+		// then, will need to get the field from the RecordMsg and properly set it with the new value after decoding it
+		//fieldDesc.
+		if d.debug {
+			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp[0:int(ddfd.size)])
 		}
 	}
 
