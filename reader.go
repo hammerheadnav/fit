@@ -745,7 +745,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		devField := DeveloperField{
 			DeveloperDataIndex:    fieldDesc.DeveloperDataIndex,
 			FieldDefinitionNumber: fieldDesc.FieldDefinitionNumber,
-			BaseTypeId:            uint8(fieldDesc.FitBaseTypeId),
+			BaseTypeId:            fieldDesc.FitBaseTypeId,
 			FieldName:             fieldName,
 			Units:                 units,
 			Value:                 value,

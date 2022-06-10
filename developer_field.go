@@ -4,7 +4,7 @@ package fit
 type DeveloperField struct {
 	DeveloperDataIndex    uint8
 	FieldDefinitionNumber uint8
-	BaseTypeId            uint8
+	BaseTypeId            FitBaseType
 	FieldName             string
 	Units                 string
 	Value                 interface{}
