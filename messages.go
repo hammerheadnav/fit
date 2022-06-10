@@ -1,6 +1,6 @@
 // Code generated using the program found in 'cmd/fitgen/main.go'. DO NOT EDIT.
 
-// SDK Version: 21.67
+// SDK Version: 21.84
 
 package fit
 
@@ -11,26 +11,28 @@ import (
 
 // FileIdMsg represents the file_id FIT message type.
 type FileIdMsg struct {
-	Type         FileType
-	Manufacturer Manufacturer
-	Product      uint16
-	SerialNumber uint32
-	TimeCreated  time.Time // Only set for files that are can be created/erased.
-	Number       uint16    // Only set for files that are not created/erased.
-	ProductName  string    // Optional free form string to indicate the devices name or model
+	Type            FileType
+	Manufacturer    Manufacturer
+	Product         uint16
+	SerialNumber    uint32
+	TimeCreated     time.Time // Only set for files that are can be created/erased.
+	Number          uint16    // Only set for files that are not created/erased.
+	ProductName     string    // Optional free form string to indicate the devices name or model
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewFileIdMsg returns a file_id FIT message
 // initialized to all-invalid values.
 func NewFileIdMsg() *FileIdMsg {
 	return &FileIdMsg{
-		Type:         0xFF,
-		Manufacturer: 0xFFFF,
-		Product:      0xFFFF,
-		SerialNumber: 0x00000000,
-		TimeCreated:  timeBase,
-		Number:       0xFFFF,
-		ProductName:  "",
+		Type:            0xFF,
+		Manufacturer:    0xFFFF,
+		Product:         0xFFFF,
+		SerialNumber:    0x00000000,
+		TimeCreated:     timeBase,
+		Number:          0xFFFF,
+		ProductName:     "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -51,6 +53,7 @@ func (x *FileIdMsg) GetProduct() interface{} {
 type FileCreatorMsg struct {
 	SoftwareVersion uint16
 	HardwareVersion uint8
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewFileCreatorMsg returns a file_creator FIT message
@@ -59,33 +62,39 @@ func NewFileCreatorMsg() *FileCreatorMsg {
 	return &FileCreatorMsg{
 		SoftwareVersion: 0xFFFF,
 		HardwareVersion: 0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // TimestampCorrelationMsg represents the timestamp_correlation FIT message type.
 type TimestampCorrelationMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewTimestampCorrelationMsg returns a timestamp_correlation FIT message
 // initialized to all-invalid values.
 func NewTimestampCorrelationMsg() *TimestampCorrelationMsg {
-	return &TimestampCorrelationMsg{}
+	return &TimestampCorrelationMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // SoftwareMsg represents the software FIT message type.
 type SoftwareMsg struct {
-	MessageIndex MessageIndex
-	Version      uint16
-	PartNumber   string
+	MessageIndex    MessageIndex
+	Version         uint16
+	PartNumber      string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSoftwareMsg returns a software FIT message
 // initialized to all-invalid values.
 func NewSoftwareMsg() *SoftwareMsg {
 	return &SoftwareMsg{
-		MessageIndex: 0xFFFF,
-		Version:      0xFFFF,
-		PartNumber:   "",
+		MessageIndex:    0xFFFF,
+		Version:         0xFFFF,
+		PartNumber:      "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -101,16 +110,18 @@ func (x *SoftwareMsg) GetVersionScaled() float64 {
 
 // SlaveDeviceMsg represents the slave_device FIT message type.
 type SlaveDeviceMsg struct {
-	Manufacturer Manufacturer
-	Product      uint16
+	Manufacturer    Manufacturer
+	Product         uint16
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSlaveDeviceMsg returns a slave_device FIT message
 // initialized to all-invalid values.
 func NewSlaveDeviceMsg() *SlaveDeviceMsg {
 	return &SlaveDeviceMsg{
-		Manufacturer: 0xFFFF,
-		Product:      0xFFFF,
+		Manufacturer:    0xFFFF,
+		Product:         0xFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -133,6 +144,7 @@ type CapabilitiesMsg struct {
 	Sports                []SportBits0 // Use sport_bits_x types where x is index of array.
 	WorkoutsSupported     WorkoutCapabilities
 	ConnectivitySupported ConnectivityCapabilities
+	DeveloperFields       map[string]DeveloperField
 }
 
 // NewCapabilitiesMsg returns a capabilities FIT message
@@ -143,50 +155,55 @@ func NewCapabilitiesMsg() *CapabilitiesMsg {
 		Sports:                nil,
 		WorkoutsSupported:     0x00000000,
 		ConnectivitySupported: 0x00000000,
+		DeveloperFields:       map[string]DeveloperField{},
 	}
 }
 
 // FileCapabilitiesMsg represents the file_capabilities FIT message type.
 type FileCapabilitiesMsg struct {
-	MessageIndex MessageIndex
-	Type         FileType
-	Flags        FileFlags
-	Directory    string
-	MaxCount     uint16
-	MaxSize      uint32
+	MessageIndex    MessageIndex
+	Type            FileType
+	Flags           FileFlags
+	Directory       string
+	MaxCount        uint16
+	MaxSize         uint32
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewFileCapabilitiesMsg returns a file_capabilities FIT message
 // initialized to all-invalid values.
 func NewFileCapabilitiesMsg() *FileCapabilitiesMsg {
 	return &FileCapabilitiesMsg{
-		MessageIndex: 0xFFFF,
-		Type:         0xFF,
-		Flags:        0x00,
-		Directory:    "",
-		MaxCount:     0xFFFF,
-		MaxSize:      0xFFFFFFFF,
+		MessageIndex:    0xFFFF,
+		Type:            0xFF,
+		Flags:           0x00,
+		Directory:       "",
+		MaxCount:        0xFFFF,
+		MaxSize:         0xFFFFFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // MesgCapabilitiesMsg represents the mesg_capabilities FIT message type.
 type MesgCapabilitiesMsg struct {
-	MessageIndex MessageIndex
-	File         FileType
-	MesgNum      MesgNum
-	CountType    MesgCount
-	Count        uint16
+	MessageIndex    MessageIndex
+	File            FileType
+	MesgNum         MesgNum
+	CountType       MesgCount
+	Count           uint16
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMesgCapabilitiesMsg returns a mesg_capabilities FIT message
 // initialized to all-invalid values.
 func NewMesgCapabilitiesMsg() *MesgCapabilitiesMsg {
 	return &MesgCapabilitiesMsg{
-		MessageIndex: 0xFFFF,
-		File:         0xFF,
-		MesgNum:      0xFFFF,
-		CountType:    0xFF,
-		Count:        0xFFFF,
+		MessageIndex:    0xFFFF,
+		File:            0xFF,
+		MesgNum:         0xFFFF,
+		CountType:       0xFF,
+		Count:           0xFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -209,22 +226,24 @@ func (x *MesgCapabilitiesMsg) GetCount() interface{} {
 
 // FieldCapabilitiesMsg represents the field_capabilities FIT message type.
 type FieldCapabilitiesMsg struct {
-	MessageIndex MessageIndex
-	File         FileType
-	MesgNum      MesgNum
-	FieldNum     uint8
-	Count        uint16
+	MessageIndex    MessageIndex
+	File            FileType
+	MesgNum         MesgNum
+	FieldNum        uint8
+	Count           uint16
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewFieldCapabilitiesMsg returns a field_capabilities FIT message
 // initialized to all-invalid values.
 func NewFieldCapabilitiesMsg() *FieldCapabilitiesMsg {
 	return &FieldCapabilitiesMsg{
-		MessageIndex: 0xFFFF,
-		File:         0xFF,
-		MesgNum:      0xFFFF,
-		FieldNum:     0xFF,
-		Count:        0xFFFF,
+		MessageIndex:    0xFFFF,
+		File:            0xFF,
+		MesgNum:         0xFFFF,
+		FieldNum:        0xFF,
+		Count:           0xFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -238,7 +257,7 @@ type DeviceSettingsMsg struct {
 	BacklightMode          BacklightMode // Mode for backlight
 	ActivityTrackerEnabled Bool          // Enabled state of the activity tracker functionality
 	ClockTime              time.Time     // UTC timestamp used to set the devices clock and date
-	PagesEnabled           []uint16      // Bitfield  to configure enabled screens for each supported loop
+	PagesEnabled           []uint16      // Bitfield to configure enabled screens for each supported loop
 	MoveAlertEnabled       Bool          // Enabled state of the move alert
 	DateMode               DateMode      // Display mode for the date
 	DisplayOrientation     DisplayOrientation
@@ -247,6 +266,7 @@ type DeviceSettingsMsg struct {
 	AutosyncMinSteps       uint16         // Minimum steps before an autosync can occur
 	AutosyncMinTime        uint16         // Minimum minutes before an autosync can occur
 	TapSensitivity         TapSensitivity // Used to hold the tap threshold setting
+	DeveloperFields        map[string]DeveloperField
 }
 
 // NewDeviceSettingsMsg returns a device_settings FIT message
@@ -270,6 +290,7 @@ func NewDeviceSettingsMsg() *DeviceSettingsMsg {
 		AutosyncMinSteps:       0xFFFF,
 		AutosyncMinTime:        0xFFFF,
 		TapSensitivity:         0xFF,
+		DeveloperFields:        map[string]DeveloperField{},
 	}
 }
 
@@ -314,6 +335,7 @@ type UserProfileMsg struct {
 	HeightSetting              DisplayMeasure
 	UserRunningStepLength      uint16 // User defined running step length set to 0 for auto length
 	UserWalkingStepLength      uint16 // User defined walking step length set to 0 for auto length
+	DeveloperFields            map[string]DeveloperField
 }
 
 // NewUserProfileMsg returns a user_profile FIT message
@@ -345,6 +367,7 @@ func NewUserProfileMsg() *UserProfileMsg {
 		HeightSetting:              0xFF,
 		UserRunningStepLength:      0xFFFF,
 		UserWalkingStepLength:      0xFFFF,
+		DeveloperFields:            map[string]DeveloperField{},
 	}
 }
 
@@ -399,6 +422,7 @@ type HrmProfileMsg struct {
 	HrmAntId          uint16
 	LogHrv            Bool
 	HrmAntIdTransType uint8
+	DeveloperFields   map[string]DeveloperField
 }
 
 // NewHrmProfileMsg returns a hrm_profile FIT message
@@ -410,6 +434,7 @@ func NewHrmProfileMsg() *HrmProfileMsg {
 		HrmAntId:          0x0000,
 		LogHrv:            0xFF,
 		HrmAntIdTransType: 0x00,
+		DeveloperFields:   map[string]DeveloperField{},
 	}
 }
 
@@ -423,6 +448,7 @@ type SdmProfileMsg struct {
 	SpeedSource       Bool // Use footpod for speed source instead of GPS
 	SdmAntIdTransType uint8
 	OdometerRollover  uint8 // Rollover counter that can be used to extend the odometer
+	DeveloperFields   map[string]DeveloperField
 }
 
 // NewSdmProfileMsg returns a sdm_profile FIT message
@@ -437,6 +463,7 @@ func NewSdmProfileMsg() *SdmProfileMsg {
 		SpeedSource:       0xFF,
 		SdmAntIdTransType: 0x00,
 		OdometerRollover:  0xFF,
+		DeveloperFields:   map[string]DeveloperField{},
 	}
 }
 
@@ -496,6 +523,7 @@ type BikeProfileMsg struct {
 	RearGearNum              uint8   // Number of rear gears
 	RearGear                 []uint8 // Number of teeth on each gear 0 is innermost
 	ShimanoDi2Enabled        Bool
+	DeveloperFields          map[string]DeveloperField
 }
 
 // NewBikeProfileMsg returns a bike_profile FIT message
@@ -534,6 +562,7 @@ func NewBikeProfileMsg() *BikeProfileMsg {
 		RearGearNum:              0x00,
 		RearGear:                 nil,
 		ShimanoDi2Enabled:        0xFF,
+		DeveloperFields:          map[string]DeveloperField{},
 	}
 }
 
@@ -618,6 +647,7 @@ type ConnectivityMsg struct {
 	GpsEphemerisDownloadEnabled Bool
 	IncidentDetectionEnabled    Bool
 	GrouptrackEnabled           Bool
+	DeveloperFields             map[string]DeveloperField
 }
 
 // NewConnectivityMsg returns a connectivity FIT message
@@ -637,27 +667,34 @@ func NewConnectivityMsg() *ConnectivityMsg {
 		GpsEphemerisDownloadEnabled: 0xFF,
 		IncidentDetectionEnabled:    0xFF,
 		GrouptrackEnabled:           0xFF,
+		DeveloperFields:             map[string]DeveloperField{},
 	}
 }
 
 // WatchfaceSettingsMsg represents the watchface_settings FIT message type.
 type WatchfaceSettingsMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewWatchfaceSettingsMsg returns a watchface_settings FIT message
 // initialized to all-invalid values.
 func NewWatchfaceSettingsMsg() *WatchfaceSettingsMsg {
-	return &WatchfaceSettingsMsg{}
+	return &WatchfaceSettingsMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // OhrSettingsMsg represents the ohr_settings FIT message type.
 type OhrSettingsMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewOhrSettingsMsg returns a ohr_settings FIT message
 // initialized to all-invalid values.
 func NewOhrSettingsMsg() *OhrSettingsMsg {
-	return &OhrSettingsMsg{}
+	return &OhrSettingsMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // ZonesTargetMsg represents the zones_target FIT message type.
@@ -667,6 +704,7 @@ type ZonesTargetMsg struct {
 	FunctionalThresholdPower uint16
 	HrCalcType               HrZoneCalc
 	PwrCalcType              PwrZoneCalc
+	DeveloperFields          map[string]DeveloperField
 }
 
 // NewZonesTargetMsg returns a zones_target FIT message
@@ -678,57 +716,64 @@ func NewZonesTargetMsg() *ZonesTargetMsg {
 		FunctionalThresholdPower: 0xFFFF,
 		HrCalcType:               0xFF,
 		PwrCalcType:              0xFF,
+		DeveloperFields:          map[string]DeveloperField{},
 	}
 }
 
 // SportMsg represents the sport FIT message type.
 type SportMsg struct {
-	Sport    Sport
-	SubSport SubSport
-	Name     string
+	Sport           Sport
+	SubSport        SubSport
+	Name            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSportMsg returns a sport FIT message
 // initialized to all-invalid values.
 func NewSportMsg() *SportMsg {
 	return &SportMsg{
-		Sport:    0xFF,
-		SubSport: 0xFF,
-		Name:     "",
+		Sport:           0xFF,
+		SubSport:        0xFF,
+		Name:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // HrZoneMsg represents the hr_zone FIT message type.
 type HrZoneMsg struct {
-	MessageIndex MessageIndex
-	HighBpm      uint8
-	Name         string
+	MessageIndex    MessageIndex
+	HighBpm         uint8
+	Name            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewHrZoneMsg returns a hr_zone FIT message
 // initialized to all-invalid values.
 func NewHrZoneMsg() *HrZoneMsg {
 	return &HrZoneMsg{
-		MessageIndex: 0xFFFF,
-		HighBpm:      0xFF,
-		Name:         "",
+		MessageIndex:    0xFFFF,
+		HighBpm:         0xFF,
+		Name:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // SpeedZoneMsg represents the speed_zone FIT message type.
 type SpeedZoneMsg struct {
-	MessageIndex MessageIndex
-	HighValue    uint16
-	Name         string
+	MessageIndex    MessageIndex
+	HighValue       uint16
+	Name            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSpeedZoneMsg returns a speed_zone FIT message
 // initialized to all-invalid values.
 func NewSpeedZoneMsg() *SpeedZoneMsg {
 	return &SpeedZoneMsg{
-		MessageIndex: 0xFFFF,
-		HighValue:    0xFFFF,
-		Name:         "",
+		MessageIndex:    0xFFFF,
+		HighValue:       0xFFFF,
+		Name:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -745,54 +790,60 @@ func (x *SpeedZoneMsg) GetHighValueScaled() float64 {
 
 // CadenceZoneMsg represents the cadence_zone FIT message type.
 type CadenceZoneMsg struct {
-	MessageIndex MessageIndex
-	HighValue    uint8
-	Name         string
+	MessageIndex    MessageIndex
+	HighValue       uint8
+	Name            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewCadenceZoneMsg returns a cadence_zone FIT message
 // initialized to all-invalid values.
 func NewCadenceZoneMsg() *CadenceZoneMsg {
 	return &CadenceZoneMsg{
-		MessageIndex: 0xFFFF,
-		HighValue:    0xFF,
-		Name:         "",
+		MessageIndex:    0xFFFF,
+		HighValue:       0xFF,
+		Name:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // PowerZoneMsg represents the power_zone FIT message type.
 type PowerZoneMsg struct {
-	MessageIndex MessageIndex
-	HighValue    uint16
-	Name         string
+	MessageIndex    MessageIndex
+	HighValue       uint16
+	Name            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewPowerZoneMsg returns a power_zone FIT message
 // initialized to all-invalid values.
 func NewPowerZoneMsg() *PowerZoneMsg {
 	return &PowerZoneMsg{
-		MessageIndex: 0xFFFF,
-		HighValue:    0xFFFF,
-		Name:         "",
+		MessageIndex:    0xFFFF,
+		HighValue:       0xFFFF,
+		Name:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // MetZoneMsg represents the met_zone FIT message type.
 type MetZoneMsg struct {
-	MessageIndex MessageIndex
-	HighBpm      uint8
-	Calories     uint16
-	FatCalories  uint8
+	MessageIndex    MessageIndex
+	HighBpm         uint8
+	Calories        uint16
+	FatCalories     uint8
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMetZoneMsg returns a met_zone FIT message
 // initialized to all-invalid values.
 func NewMetZoneMsg() *MetZoneMsg {
 	return &MetZoneMsg{
-		MessageIndex: 0xFFFF,
-		HighBpm:      0xFF,
-		Calories:     0xFFFF,
-		FatCalories:  0xFF,
+		MessageIndex:    0xFFFF,
+		HighBpm:         0xFF,
+		Calories:        0xFFFF,
+		FatCalories:     0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -823,6 +874,7 @@ type DiveSettingsMsg struct {
 	Name                string
 	HeartRateSourceType SourceType
 	HeartRateSource     uint8
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewDiveSettingsMsg returns a dive_settings FIT message
@@ -832,6 +884,7 @@ func NewDiveSettingsMsg() *DiveSettingsMsg {
 		Name:                "",
 		HeartRateSourceType: 0xFF,
 		HeartRateSource:     0xFF,
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -852,22 +905,28 @@ func (x *DiveSettingsMsg) GetHeartRateSource() interface{} {
 
 // DiveAlarmMsg represents the dive_alarm FIT message type.
 type DiveAlarmMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewDiveAlarmMsg returns a dive_alarm FIT message
 // initialized to all-invalid values.
 func NewDiveAlarmMsg() *DiveAlarmMsg {
-	return &DiveAlarmMsg{}
+	return &DiveAlarmMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // DiveGasMsg represents the dive_gas FIT message type.
 type DiveGasMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewDiveGasMsg returns a dive_gas FIT message
 // initialized to all-invalid values.
 func NewDiveGasMsg() *DiveGasMsg {
-	return &DiveGasMsg{}
+	return &DiveGasMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // GoalMsg represents the goal FIT message type.
@@ -885,6 +944,7 @@ type GoalMsg struct {
 	RecurrenceValue uint16
 	Enabled         Bool
 	Source          GoalSource
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewGoalMsg returns a goal FIT message
@@ -904,33 +964,36 @@ func NewGoalMsg() *GoalMsg {
 		RecurrenceValue: 0xFFFF,
 		Enabled:         0xFF,
 		Source:          0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // ActivityMsg represents the activity FIT message type.
 type ActivityMsg struct {
-	Timestamp      time.Time
-	TotalTimerTime uint32 // Exclude pauses
-	NumSessions    uint16
-	Type           ActivityMode
-	Event          Event
-	EventType      EventType
-	LocalTimestamp time.Time // timestamp epoch expressed in local time, used to convert activity timestamps to local time
-	EventGroup     uint8
+	Timestamp       time.Time
+	TotalTimerTime  uint32 // Exclude pauses
+	NumSessions     uint16
+	Type            ActivityMode
+	Event           Event
+	EventType       EventType
+	LocalTimestamp  time.Time // timestamp epoch expressed in local time, used to convert activity timestamps to local time
+	EventGroup      uint8
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewActivityMsg returns a activity FIT message
 // initialized to all-invalid values.
 func NewActivityMsg() *ActivityMsg {
 	return &ActivityMsg{
-		Timestamp:      timeBase,
-		TotalTimerTime: 0xFFFFFFFF,
-		NumSessions:    0xFFFF,
-		Type:           0xFF,
-		Event:          0xFF,
-		EventType:      0xFF,
-		LocalTimestamp: timeBase,
-		EventGroup:     0xFF,
+		Timestamp:       timeBase,
+		TotalTimerTime:  0xFFFFFFFF,
+		NumSessions:     0xFFFF,
+		Type:            0xFF,
+		Event:           0xFF,
+		EventType:       0xFF,
+		LocalTimestamp:  timeBase,
+		EventGroup:      0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -1038,6 +1101,7 @@ type SessionMsg struct {
 	EnhancedMaxAltitude          uint32
 	TotalAnaerobicTrainingEffect uint8
 	AvgVam                       uint16
+	DeveloperFields              map[string]DeveloperField
 }
 
 // NewSessionMsg returns a session FIT message
@@ -1135,6 +1199,7 @@ func NewSessionMsg() *SessionMsg {
 		EnhancedMaxAltitude:          0xFFFFFFFF,
 		TotalAnaerobicTrainingEffect: 0xFF,
 		AvgVam:                       0xFFFF,
+		DeveloperFields:              map[string]DeveloperField{},
 	}
 }
 
@@ -1786,6 +1851,7 @@ type LapMsg struct {
 	EnhancedMinAltitude           uint32
 	EnhancedMaxAltitude           uint32
 	AvgVam                        uint16
+	DeveloperFields               map[string]DeveloperField
 }
 
 // NewLapMsg returns a lap FIT message
@@ -1875,6 +1941,7 @@ func NewLapMsg() *LapMsg {
 		EnhancedMinAltitude:           0xFFFFFFFF,
 		EnhancedMaxAltitude:           0xFFFFFFFF,
 		AvgVam:                        0xFFFF,
+		DeveloperFields:               map[string]DeveloperField{},
 	}
 }
 
@@ -2448,6 +2515,7 @@ type LengthMsg struct {
 	OpponentScore      uint16
 	StrokeCount        []uint16 // stroke_type enum used as the index
 	ZoneCount          []uint16 // zone number used as the index
+	DeveloperFields    map[string]DeveloperField
 }
 
 // NewLengthMsg returns a length FIT message
@@ -2472,6 +2540,7 @@ func NewLengthMsg() *LengthMsg {
 		OpponentScore:      0xFFFF,
 		StrokeCount:        nil,
 		ZoneCount:          nil,
+		DeveloperFields:    map[string]DeveloperField{},
 	}
 }
 
@@ -2521,11 +2590,11 @@ type RecordMsg struct {
 	Power                         uint16
 	CompressedSpeedDistance       []byte
 	Grade                         int16
-	Resistance                    uint8 // Relative. 0 is none  254 is Max.
+	Resistance                    uint8 // Relative. 0 is none 254 is Max.
 	TimeFromCourse                int32
 	CycleLength                   uint8
 	Temperature                   int8
-	Speed1s                       []uint8 // Speed at 1s intervals.  Timestamp field indicates time of last array element.
+	Speed1s                       []uint8 // Speed at 1s intervals. Timestamp field indicates time of last array element.
 	Cycles                        uint8
 	TotalCycles                   uint32
 	CompressedAccumulatedPower    uint16
@@ -2558,6 +2627,7 @@ type RecordMsg struct {
 	DeviceIndex                   DeviceIndex
 	EnhancedSpeed                 uint32
 	EnhancedAltitude              uint32
+	DeveloperFields               map[string]DeveloperField
 }
 
 // NewRecordMsg returns a record FIT message
@@ -2612,6 +2682,7 @@ func NewRecordMsg() *RecordMsg {
 		DeviceIndex:                   0xFF,
 		EnhancedSpeed:                 0xFFFFFFFF,
 		EnhancedAltitude:              0xFFFFFFFF,
+		DeveloperFields:               map[string]DeveloperField{},
 	}
 }
 
@@ -3009,12 +3080,13 @@ type EventMsg struct {
 	EventGroup          uint8
 	Score               uint16               // Do not populate directly. Autogenerated by decoder for sport_point subfield components
 	OpponentScore       uint16               // Do not populate directly. Autogenerated by decoder for sport_point subfield components
-	FrontGearNum        uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components.  Front gear number. 1 is innermost.
-	FrontGear           uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components.  Number of front teeth.
-	RearGearNum         uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components.  Rear gear number. 1 is innermost.
-	RearGear            uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components.  Number of rear teeth.
+	FrontGearNum        uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components. Front gear number. 1 is innermost.
+	FrontGear           uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components. Number of front teeth.
+	RearGearNum         uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components. Rear gear number. 1 is innermost.
+	RearGear            uint8                // Do not populate directly. Autogenerated by decoder for gear_change subfield components. Number of rear teeth.
 	RadarThreatLevelMax RadarThreatLevelType // Do not populate directly. Autogenerated by decoder for threat_alert subfield components.
 	RadarThreatCount    uint8                // Do not populate directly. Autogenerated by decoder for threat_alert subfield components.
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewEventMsg returns a event FIT message
@@ -3035,6 +3107,7 @@ func NewEventMsg() *EventMsg {
 		RearGear:            0x00,
 		RadarThreatLevelMax: 0xFF,
 		RadarThreatCount:    0xFF,
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -3080,8 +3153,6 @@ func (x *EventMsg) GetData() interface{} {
 		return uint32(x.Data)
 	case EventFrontGearChange, EventRearGearChange:
 		return uint32(x.Data)
-	case EventRadarThreatAlert:
-		return uint32(x.Data)
 	default:
 		return x.Data
 	}
@@ -3115,13 +3186,6 @@ func (x *EventMsg) expandComponents() {
 			x.FrontGear = uint8(
 				(x.Data >> 24) & ((1 << 8) - 1),
 			)
-		case EventRadarThreatAlert:
-			x.RadarThreatLevelMax = RadarThreatLevelType(
-				(x.Data >> 0) & ((1 << 8) - 1),
-			)
-			x.RadarThreatCount = uint8(
-				(x.Data >> 8) & ((1 << 8) - 1),
-			)
 		}
 	}
 }
@@ -3146,6 +3210,7 @@ type DeviceInfoMsg struct {
 	AntNetwork          AntNetwork
 	SourceType          SourceType
 	ProductName         string // Optional free form string to indicate the devices name or model
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewDeviceInfoMsg returns a device_info FIT message
@@ -3170,6 +3235,7 @@ func NewDeviceInfoMsg() *DeviceInfoMsg {
 		AntNetwork:          0xFF,
 		SourceType:          0xFF,
 		ProductName:         "",
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -3222,26 +3288,62 @@ func (x *DeviceInfoMsg) GetProduct() interface{} {
 	}
 }
 
+// DeviceAuxBatteryInfoMsg represents the device_aux_battery_info FIT message type.
+type DeviceAuxBatteryInfoMsg struct {
+	Timestamp         time.Time
+	DeviceIndex       DeviceIndex
+	BatteryVoltage    uint16
+	BatteryStatus     BatteryStatus
+	BatteryIdentifier uint8
+	DeveloperFields   map[string]DeveloperField
+}
+
+// NewDeviceAuxBatteryInfoMsg returns a device_aux_battery_info FIT message
+// initialized to all-invalid values.
+func NewDeviceAuxBatteryInfoMsg() *DeviceAuxBatteryInfoMsg {
+	return &DeviceAuxBatteryInfoMsg{
+		Timestamp:         timeBase,
+		DeviceIndex:       0xFF,
+		BatteryVoltage:    0xFFFF,
+		BatteryStatus:     0xFF,
+		BatteryIdentifier: 0xFF,
+		DeveloperFields:   map[string]DeveloperField{},
+	}
+}
+
+// GetBatteryVoltageScaled returns BatteryVoltage
+// with scale and any offset applied. NaN is returned if the
+// field has an invalid value (i.e. has not been set).
+// Units: V
+func (x *DeviceAuxBatteryInfoMsg) GetBatteryVoltageScaled() float64 {
+	if x.BatteryVoltage == 0xFFFF {
+		return math.NaN()
+	}
+	return float64(x.BatteryVoltage) / 256
+}
+
 // TrainingFileMsg represents the training_file FIT message type.
 type TrainingFileMsg struct {
-	Timestamp    time.Time
-	Type         FileType
-	Manufacturer Manufacturer
-	Product      uint16
-	SerialNumber uint32
-	TimeCreated  time.Time
+	Timestamp       time.Time
+	Type            FileType
+	Manufacturer    Manufacturer
+	Product         uint16
+	SerialNumber    uint32
+	TimeCreated     time.Time
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewTrainingFileMsg returns a training_file FIT message
 // initialized to all-invalid values.
 func NewTrainingFileMsg() *TrainingFileMsg {
 	return &TrainingFileMsg{
-		Timestamp:    timeBase,
-		Type:         0xFF,
-		Manufacturer: 0xFFFF,
-		Product:      0xFFFF,
-		SerialNumber: 0x00000000,
-		TimeCreated:  timeBase,
+		Timestamp:       timeBase,
+		Type:            0xFF,
+		Manufacturer:    0xFFFF,
+		Product:         0xFFFF,
+		SerialNumber:    0x00000000,
+		TimeCreated:     timeBase,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -3267,7 +3369,7 @@ type WeatherConditionsMsg struct {
 	WindDirection            uint16
 	WindSpeed                uint16
 	PrecipitationProbability uint8 // range 0-100
-	TemperatureFeelsLike     int8  // Heat Index if  GCS heatIdx above or equal to 90F or wind chill if GCS windChill below or equal to 32F
+	TemperatureFeelsLike     int8  // Heat Index if GCS heatIdx above or equal to 90F or wind chill if GCS windChill below or equal to 32F
 	RelativeHumidity         uint8
 	Location                 string // string corresponding to GCS response location string
 	ObservedAtTime           time.Time
@@ -3276,6 +3378,7 @@ type WeatherConditionsMsg struct {
 	DayOfWeek                DayOfWeek
 	HighTemperature          int8
 	LowTemperature           int8
+	DeveloperFields          map[string]DeveloperField
 }
 
 // NewWeatherConditionsMsg returns a weather_conditions FIT message
@@ -3298,6 +3401,7 @@ func NewWeatherConditionsMsg() *WeatherConditionsMsg {
 		DayOfWeek:                0xFF,
 		HighTemperature:          0x7F,
 		LowTemperature:           0x7F,
+		DeveloperFields:          map[string]DeveloperField{},
 	}
 }
 
@@ -3314,141 +3418,175 @@ func (x *WeatherConditionsMsg) GetWindSpeedScaled() float64 {
 
 // WeatherAlertMsg represents the weather_alert FIT message type.
 type WeatherAlertMsg struct {
-	Timestamp  time.Time
-	ReportId   string            // Unique identifier from GCS report ID string, length is 12
-	IssueTime  time.Time         // Time alert was issued
-	ExpireTime time.Time         // Time alert expires
-	Severity   WeatherSeverity   // Warning, Watch, Advisory, Statement
-	Type       WeatherSevereType // Tornado, Severe Thunderstorm, etc.
+	Timestamp       time.Time
+	ReportId        string            // Unique identifier from GCS report ID string, length is 12
+	IssueTime       time.Time         // Time alert was issued
+	ExpireTime      time.Time         // Time alert expires
+	Severity        WeatherSeverity   // Warning, Watch, Advisory, Statement
+	Type            WeatherSevereType // Tornado, Severe Thunderstorm, etc.
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewWeatherAlertMsg returns a weather_alert FIT message
 // initialized to all-invalid values.
 func NewWeatherAlertMsg() *WeatherAlertMsg {
 	return &WeatherAlertMsg{
-		Timestamp:  timeBase,
-		ReportId:   "",
-		IssueTime:  timeBase,
-		ExpireTime: timeBase,
-		Severity:   0xFF,
-		Type:       0xFF,
+		Timestamp:       timeBase,
+		ReportId:        "",
+		IssueTime:       timeBase,
+		ExpireTime:      timeBase,
+		Severity:        0xFF,
+		Type:            0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // GpsMetadataMsg represents the gps_metadata FIT message type.
 type GpsMetadataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewGpsMetadataMsg returns a gps_metadata FIT message
 // initialized to all-invalid values.
 func NewGpsMetadataMsg() *GpsMetadataMsg {
-	return &GpsMetadataMsg{}
+	return &GpsMetadataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // CameraEventMsg represents the camera_event FIT message type.
 type CameraEventMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewCameraEventMsg returns a camera_event FIT message
 // initialized to all-invalid values.
 func NewCameraEventMsg() *CameraEventMsg {
-	return &CameraEventMsg{}
+	return &CameraEventMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // GyroscopeDataMsg represents the gyroscope_data FIT message type.
 type GyroscopeDataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewGyroscopeDataMsg returns a gyroscope_data FIT message
 // initialized to all-invalid values.
 func NewGyroscopeDataMsg() *GyroscopeDataMsg {
-	return &GyroscopeDataMsg{}
+	return &GyroscopeDataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // AccelerometerDataMsg represents the accelerometer_data FIT message type.
 type AccelerometerDataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewAccelerometerDataMsg returns a accelerometer_data FIT message
 // initialized to all-invalid values.
 func NewAccelerometerDataMsg() *AccelerometerDataMsg {
-	return &AccelerometerDataMsg{}
+	return &AccelerometerDataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // MagnetometerDataMsg represents the magnetometer_data FIT message type.
 type MagnetometerDataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMagnetometerDataMsg returns a magnetometer_data FIT message
 // initialized to all-invalid values.
 func NewMagnetometerDataMsg() *MagnetometerDataMsg {
-	return &MagnetometerDataMsg{}
+	return &MagnetometerDataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // BarometerDataMsg represents the barometer_data FIT message type.
 type BarometerDataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewBarometerDataMsg returns a barometer_data FIT message
 // initialized to all-invalid values.
 func NewBarometerDataMsg() *BarometerDataMsg {
-	return &BarometerDataMsg{}
+	return &BarometerDataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // ThreeDSensorCalibrationMsg represents the three_d_sensor_calibration FIT message type.
 type ThreeDSensorCalibrationMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewThreeDSensorCalibrationMsg returns a three_d_sensor_calibration FIT message
 // initialized to all-invalid values.
 func NewThreeDSensorCalibrationMsg() *ThreeDSensorCalibrationMsg {
-	return &ThreeDSensorCalibrationMsg{}
+	return &ThreeDSensorCalibrationMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // OneDSensorCalibrationMsg represents the one_d_sensor_calibration FIT message type.
 type OneDSensorCalibrationMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewOneDSensorCalibrationMsg returns a one_d_sensor_calibration FIT message
 // initialized to all-invalid values.
 func NewOneDSensorCalibrationMsg() *OneDSensorCalibrationMsg {
-	return &OneDSensorCalibrationMsg{}
+	return &OneDSensorCalibrationMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // VideoFrameMsg represents the video_frame FIT message type.
 type VideoFrameMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewVideoFrameMsg returns a video_frame FIT message
 // initialized to all-invalid values.
 func NewVideoFrameMsg() *VideoFrameMsg {
-	return &VideoFrameMsg{}
+	return &VideoFrameMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // ObdiiDataMsg represents the obdii_data FIT message type.
 type ObdiiDataMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewObdiiDataMsg returns a obdii_data FIT message
 // initialized to all-invalid values.
 func NewObdiiDataMsg() *ObdiiDataMsg {
-	return &ObdiiDataMsg{}
+	return &ObdiiDataMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // NmeaSentenceMsg represents the nmea_sentence FIT message type.
 type NmeaSentenceMsg struct {
-	Timestamp   time.Time // Timestamp message was output
-	TimestampMs uint16    // Fractional part of timestamp, added to timestamp
-	Sentence    string    // NMEA sentence
+	Timestamp       time.Time // Timestamp message was output
+	TimestampMs     uint16    // Fractional part of timestamp, added to timestamp
+	Sentence        string    // NMEA sentence
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewNmeaSentenceMsg returns a nmea_sentence FIT message
 // initialized to all-invalid values.
 func NewNmeaSentenceMsg() *NmeaSentenceMsg {
 	return &NmeaSentenceMsg{
-		Timestamp:   timeBase,
-		TimestampMs: 0xFFFF,
-		Sentence:    "",
+		Timestamp:       timeBase,
+		TimestampMs:     0xFFFF,
+		Sentence:        "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -3463,9 +3601,10 @@ type AviationAttitudeMsg struct {
 	AccelNormal           []int16   // Range -78.4 to +78.4 (-8 Gs to 8 Gs)
 	TurnRate              []int16   // Range -8.727 to +8.727 (-500 degs/sec to +500 degs/sec)
 	Stage                 []AttitudeStage
-	AttitudeStageComplete []uint8  // The percent complete of the current attitude stage.  Set to 0 for attitude stages 0, 1 and 2 and to 100 for attitude stage 3 by AHRS modules that do not support it.  Range - 100
+	AttitudeStageComplete []uint8  // The percent complete of the current attitude stage. Set to 0 for attitude stages 0, 1 and 2 and to 100 for attitude stage 3 by AHRS modules that do not support it. Range - 100
 	Track                 []uint16 // Track Angle/Heading Range 0 - 2pi
 	Validity              []AttitudeValidity
+	DeveloperFields       map[string]DeveloperField
 }
 
 // NewAviationAttitudeMsg returns a aviation_attitude FIT message
@@ -3484,6 +3623,7 @@ func NewAviationAttitudeMsg() *AviationAttitudeMsg {
 		AttitudeStageComplete: nil,
 		Track:                 nil,
 		Validity:              nil,
+		DeveloperFields:       map[string]DeveloperField{},
 	}
 }
 
@@ -3573,61 +3713,72 @@ func (x *AviationAttitudeMsg) GetTrackScaled() []float64 {
 
 // VideoMsg represents the video FIT message type.
 type VideoMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewVideoMsg returns a video FIT message
 // initialized to all-invalid values.
 func NewVideoMsg() *VideoMsg {
-	return &VideoMsg{}
+	return &VideoMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // VideoTitleMsg represents the video_title FIT message type.
 type VideoTitleMsg struct {
-	MessageIndex MessageIndex // Long titles will be split into multiple parts
-	MessageCount uint16       // Total number of title parts
-	Text         string
+	MessageIndex    MessageIndex // Long titles will be split into multiple parts
+	MessageCount    uint16       // Total number of title parts
+	Text            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewVideoTitleMsg returns a video_title FIT message
 // initialized to all-invalid values.
 func NewVideoTitleMsg() *VideoTitleMsg {
 	return &VideoTitleMsg{
-		MessageIndex: 0xFFFF,
-		MessageCount: 0xFFFF,
-		Text:         "",
+		MessageIndex:    0xFFFF,
+		MessageCount:    0xFFFF,
+		Text:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // VideoDescriptionMsg represents the video_description FIT message type.
 type VideoDescriptionMsg struct {
-	MessageIndex MessageIndex // Long descriptions will be split into multiple parts
-	MessageCount uint16       // Total number of description parts
-	Text         string
+	MessageIndex    MessageIndex // Long descriptions will be split into multiple parts
+	MessageCount    uint16       // Total number of description parts
+	Text            string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewVideoDescriptionMsg returns a video_description FIT message
 // initialized to all-invalid values.
 func NewVideoDescriptionMsg() *VideoDescriptionMsg {
 	return &VideoDescriptionMsg{
-		MessageIndex: 0xFFFF,
-		MessageCount: 0xFFFF,
-		Text:         "",
+		MessageIndex:    0xFFFF,
+		MessageCount:    0xFFFF,
+		Text:            "",
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // VideoClipMsg represents the video_clip FIT message type.
 type VideoClipMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewVideoClipMsg returns a video_clip FIT message
 // initialized to all-invalid values.
 func NewVideoClipMsg() *VideoClipMsg {
-	return &VideoClipMsg{}
+	return &VideoClipMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // SetMsg represents the set FIT message type.
 type SetMsg struct {
 	WeightDisplayUnit FitBaseUnit
+	DeveloperFields   map[string]DeveloperField
 }
 
 // NewSetMsg returns a set FIT message
@@ -3635,27 +3786,34 @@ type SetMsg struct {
 func NewSetMsg() *SetMsg {
 	return &SetMsg{
 		WeightDisplayUnit: 0xFFFF,
+		DeveloperFields:   map[string]DeveloperField{},
 	}
 }
 
 // JumpMsg represents the jump FIT message type.
 type JumpMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewJumpMsg returns a jump FIT message
 // initialized to all-invalid values.
 func NewJumpMsg() *JumpMsg {
-	return &JumpMsg{}
+	return &JumpMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // ClimbProMsg represents the climb_pro FIT message type.
 type ClimbProMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewClimbProMsg returns a climb_pro FIT message
 // initialized to all-invalid values.
 func NewClimbProMsg() *ClimbProMsg {
-	return &ClimbProMsg{}
+	return &ClimbProMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // FieldDescriptionMsg represents the field_description FIT message type.
@@ -3670,6 +3828,7 @@ type FieldDescriptionMsg struct {
 	FitBaseUnitId         FitBaseUnit
 	NativeMesgNum         MesgNum
 	NativeFieldNum        uint8
+	DeveloperFields       map[string]DeveloperField
 }
 
 // NewFieldDescriptionMsg returns a field_description FIT message
@@ -3686,6 +3845,7 @@ func NewFieldDescriptionMsg() *FieldDescriptionMsg {
 		FitBaseUnitId:         0xFFFF,
 		NativeMesgNum:         0xFFFF,
 		NativeFieldNum:        0xFF,
+		DeveloperFields:       map[string]DeveloperField{},
 	}
 }
 
@@ -3696,6 +3856,7 @@ type DeveloperDataIdMsg struct {
 	ManufacturerId     Manufacturer
 	DeveloperDataIndex uint8
 	ApplicationVersion uint32
+	DeveloperFields    map[string]DeveloperField
 }
 
 // NewDeveloperDataIdMsg returns a developer_data_id FIT message
@@ -3707,52 +3868,57 @@ func NewDeveloperDataIdMsg() *DeveloperDataIdMsg {
 		ManufacturerId:     0xFFFF,
 		DeveloperDataIndex: 0xFF,
 		ApplicationVersion: 0xFFFFFFFF,
+		DeveloperFields:    map[string]DeveloperField{},
 	}
 }
 
 // CourseMsg represents the course FIT message type.
 type CourseMsg struct {
-	Sport        Sport
-	Name         string
-	Capabilities CourseCapabilities
-	SubSport     SubSport
+	Sport           Sport
+	Name            string
+	Capabilities    CourseCapabilities
+	SubSport        SubSport
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewCourseMsg returns a course FIT message
 // initialized to all-invalid values.
 func NewCourseMsg() *CourseMsg {
 	return &CourseMsg{
-		Sport:        0xFF,
-		Name:         "",
-		Capabilities: 0x00000000,
-		SubSport:     0xFF,
+		Sport:           0xFF,
+		Name:            "",
+		Capabilities:    0x00000000,
+		SubSport:        0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // CoursePointMsg represents the course_point FIT message type.
 type CoursePointMsg struct {
-	MessageIndex MessageIndex
-	Timestamp    time.Time
-	PositionLat  Latitude
-	PositionLong Longitude
-	Distance     uint32
-	Type         CoursePoint
-	Name         string
-	Favorite     Bool
+	MessageIndex    MessageIndex
+	Timestamp       time.Time
+	PositionLat     Latitude
+	PositionLong    Longitude
+	Distance        uint32
+	Type            CoursePoint
+	Name            string
+	Favorite        Bool
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewCoursePointMsg returns a course_point FIT message
 // initialized to all-invalid values.
 func NewCoursePointMsg() *CoursePointMsg {
 	return &CoursePointMsg{
-		MessageIndex: 0xFFFF,
-		Timestamp:    timeBase,
-		PositionLat:  NewLatitudeInvalid(),
-		PositionLong: NewLongitudeInvalid(),
-		Distance:     0xFFFFFFFF,
-		Type:         0xFF,
-		Name:         "",
-		Favorite:     0xFF,
+		MessageIndex:    0xFFFF,
+		Timestamp:       timeBase,
+		PositionLat:     NewLatitudeInvalid(),
+		PositionLong:    NewLongitudeInvalid(),
+		Distance:        0xFFFFFFFF,
+		Type:            0xFF,
+		Name:            "",
+		Favorite:        0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -3778,6 +3944,7 @@ type SegmentIdMsg struct {
 	DefaultRaceLeader     uint8                // Index for the Leader Board entry selected as the default race participant
 	DeleteStatus          SegmentDeleteStatus  // Indicates if any segments should be deleted
 	SelectionType         SegmentSelectionType // Indicates how the segment was selected to be sent to the device
+	DeveloperFields       map[string]DeveloperField
 }
 
 // NewSegmentIdMsg returns a segment_id FIT message
@@ -3793,6 +3960,7 @@ func NewSegmentIdMsg() *SegmentIdMsg {
 		DefaultRaceLeader:     0xFF,
 		DeleteStatus:          0xFF,
 		SelectionType:         0xFF,
+		DeveloperFields:       map[string]DeveloperField{},
 	}
 }
 
@@ -3804,6 +3972,7 @@ type SegmentLeaderboardEntryMsg struct {
 	GroupPrimaryKey uint32                 // Primary user ID of this leader
 	ActivityId      uint32                 // ID of the activity associated with this leader time
 	SegmentTime     uint32                 // Segment Time (includes pauses)
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSegmentLeaderboardEntryMsg returns a segment_leaderboard_entry FIT message
@@ -3816,6 +3985,7 @@ func NewSegmentLeaderboardEntryMsg() *SegmentLeaderboardEntryMsg {
 		GroupPrimaryKey: 0xFFFFFFFF,
 		ActivityId:      0xFFFFFFFF,
 		SegmentTime:     0xFFFFFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -3832,24 +4002,26 @@ func (x *SegmentLeaderboardEntryMsg) GetSegmentTimeScaled() float64 {
 
 // SegmentPointMsg represents the segment_point FIT message type.
 type SegmentPointMsg struct {
-	MessageIndex MessageIndex
-	PositionLat  Latitude
-	PositionLong Longitude
-	Distance     uint32   // Accumulated distance along the segment at the described point
-	Altitude     uint16   // Accumulated altitude along the segment at the described point
-	LeaderTime   []uint32 // Accumualted time each leader board member required to reach the described point. This value is zero for all leader board members at the starting point of the segment.
+	MessageIndex    MessageIndex
+	PositionLat     Latitude
+	PositionLong    Longitude
+	Distance        uint32   // Accumulated distance along the segment at the described point
+	Altitude        uint16   // Accumulated altitude along the segment at the described point
+	LeaderTime      []uint32 // Accumualted time each leader board member required to reach the described point. This value is zero for all leader board members at the starting point of the segment.
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewSegmentPointMsg returns a segment_point FIT message
 // initialized to all-invalid values.
 func NewSegmentPointMsg() *SegmentPointMsg {
 	return &SegmentPointMsg{
-		MessageIndex: 0xFFFF,
-		PositionLat:  NewLatitudeInvalid(),
-		PositionLong: NewLongitudeInvalid(),
-		Distance:     0xFFFFFFFF,
-		Altitude:     0xFFFF,
-		LeaderTime:   nil,
+		MessageIndex:    0xFFFF,
+		PositionLat:     NewLatitudeInvalid(),
+		PositionLong:    NewLongitudeInvalid(),
+		Distance:        0xFFFFFFFF,
+		Altitude:        0xFFFF,
+		LeaderTime:      nil,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -3964,6 +4136,7 @@ type SegmentLapMsg struct {
 	TotalFractionalCycles       uint8 // fractional part of the total_cycles
 	FrontGearShiftCount         uint16
 	RearGearShiftCount          uint16
+	DeveloperFields             map[string]DeveloperField
 }
 
 // NewSegmentLapMsg returns a segment_lap FIT message
@@ -4043,6 +4216,7 @@ func NewSegmentLapMsg() *SegmentLapMsg {
 		TotalFractionalCycles:       0xFF,
 		FrontGearShiftCount:         0xFFFF,
 		RearGearShiftCount:          0xFFFF,
+		DeveloperFields:             map[string]DeveloperField{},
 	}
 }
 
@@ -4421,6 +4595,7 @@ type SegmentFileMsg struct {
 	LeaderType            []SegmentLeaderboardType // Leader type of each leader in the segment file
 	LeaderGroupPrimaryKey []uint32                 // Group primary key of each leader in the segment file
 	LeaderActivityId      []uint32                 // Activity ID of each leader in the segment file
+	DeveloperFields       map[string]DeveloperField
 }
 
 // NewSegmentFileMsg returns a segment_file FIT message
@@ -4434,31 +4609,34 @@ func NewSegmentFileMsg() *SegmentFileMsg {
 		LeaderType:            nil,
 		LeaderGroupPrimaryKey: nil,
 		LeaderActivityId:      nil,
+		DeveloperFields:       map[string]DeveloperField{},
 	}
 }
 
 // WorkoutMsg represents the workout FIT message type.
 type WorkoutMsg struct {
-	Sport          Sport
-	Capabilities   WorkoutCapabilities
-	NumValidSteps  uint16 // number of valid steps
-	WktName        string
-	SubSport       SubSport
-	PoolLength     uint16
-	PoolLengthUnit DisplayMeasure
+	Sport           Sport
+	Capabilities    WorkoutCapabilities
+	NumValidSteps   uint16 // number of valid steps
+	WktName         string
+	SubSport        SubSport
+	PoolLength      uint16
+	PoolLengthUnit  DisplayMeasure
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewWorkoutMsg returns a workout FIT message
 // initialized to all-invalid values.
 func NewWorkoutMsg() *WorkoutMsg {
 	return &WorkoutMsg{
-		Sport:          0xFF,
-		Capabilities:   0x00000000,
-		NumValidSteps:  0xFFFF,
-		WktName:        "",
-		SubSport:       0xFF,
-		PoolLength:     0xFFFF,
-		PoolLengthUnit: 0xFF,
+		Sport:           0xFF,
+		Capabilities:    0x00000000,
+		NumValidSteps:   0xFFFF,
+		WktName:         "",
+		SubSport:        0xFF,
+		PoolLength:      0xFFFF,
+		PoolLengthUnit:  0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -4475,26 +4653,28 @@ func (x *WorkoutMsg) GetPoolLengthScaled() float64 {
 
 // WorkoutSessionMsg represents the workout_session FIT message type.
 type WorkoutSessionMsg struct {
-	MessageIndex   MessageIndex
-	Sport          Sport
-	SubSport       SubSport
-	NumValidSteps  uint16
-	FirstStepIndex uint16
-	PoolLength     uint16
-	PoolLengthUnit DisplayMeasure
+	MessageIndex    MessageIndex
+	Sport           Sport
+	SubSport        SubSport
+	NumValidSteps   uint16
+	FirstStepIndex  uint16
+	PoolLength      uint16
+	PoolLengthUnit  DisplayMeasure
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewWorkoutSessionMsg returns a workout_session FIT message
 // initialized to all-invalid values.
 func NewWorkoutSessionMsg() *WorkoutSessionMsg {
 	return &WorkoutSessionMsg{
-		MessageIndex:   0xFFFF,
-		Sport:          0xFF,
-		SubSport:       0xFF,
-		NumValidSteps:  0xFFFF,
-		FirstStepIndex: 0xFFFF,
-		PoolLength:     0xFFFF,
-		PoolLengthUnit: 0xFF,
+		MessageIndex:    0xFFFF,
+		Sport:           0xFF,
+		SubSport:        0xFF,
+		NumValidSteps:   0xFFFF,
+		FirstStepIndex:  0xFFFF,
+		PoolLength:      0xFFFF,
+		PoolLengthUnit:  0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -4511,36 +4691,46 @@ func (x *WorkoutSessionMsg) GetPoolLengthScaled() float64 {
 
 // WorkoutStepMsg represents the workout_step FIT message type.
 type WorkoutStepMsg struct {
-	MessageIndex          MessageIndex
-	WktStepName           string
-	DurationType          WktStepDuration
-	DurationValue         uint32
-	TargetType            WktStepTarget
-	TargetValue           uint32
-	CustomTargetValueLow  uint32
-	CustomTargetValueHigh uint32
-	Intensity             Intensity
-	Notes                 string
-	Equipment             WorkoutEquipment
-	ExerciseCategory      ExerciseCategory
+	MessageIndex                   MessageIndex
+	WktStepName                    string
+	DurationType                   WktStepDuration
+	DurationValue                  uint32
+	TargetType                     WktStepTarget
+	TargetValue                    uint32
+	CustomTargetValueLow           uint32
+	CustomTargetValueHigh          uint32
+	Intensity                      Intensity
+	Notes                          string
+	Equipment                      WorkoutEquipment
+	ExerciseCategory               ExerciseCategory
+	SecondaryTargetType            WktStepTarget
+	SecondaryTargetValue           uint32
+	SecondaryCustomTargetValueLow  uint32
+	SecondaryCustomTargetValueHigh uint32
+	DeveloperFields                map[string]DeveloperField
 }
 
 // NewWorkoutStepMsg returns a workout_step FIT message
 // initialized to all-invalid values.
 func NewWorkoutStepMsg() *WorkoutStepMsg {
 	return &WorkoutStepMsg{
-		MessageIndex:          0xFFFF,
-		WktStepName:           "",
-		DurationType:          0xFF,
-		DurationValue:         0xFFFFFFFF,
-		TargetType:            0xFF,
-		TargetValue:           0xFFFFFFFF,
-		CustomTargetValueLow:  0xFFFFFFFF,
-		CustomTargetValueHigh: 0xFFFFFFFF,
-		Intensity:             0xFF,
-		Notes:                 "",
-		Equipment:             0xFF,
-		ExerciseCategory:      0xFFFF,
+		MessageIndex:                   0xFFFF,
+		WktStepName:                    "",
+		DurationType:                   0xFF,
+		DurationValue:                  0xFFFFFFFF,
+		TargetType:                     0xFF,
+		TargetValue:                    0xFFFFFFFF,
+		CustomTargetValueLow:           0xFFFFFFFF,
+		CustomTargetValueHigh:          0xFFFFFFFF,
+		Intensity:                      0xFF,
+		Notes:                          "",
+		Equipment:                      0xFF,
+		ExerciseCategory:               0xFFFF,
+		SecondaryTargetType:            0xFF,
+		SecondaryTargetValue:           0xFFFFFFFF,
+		SecondaryCustomTargetValueLow:  0xFFFFFFFF,
+		SecondaryCustomTargetValueHigh: 0xFFFFFFFF,
+		DeveloperFields:                map[string]DeveloperField{},
 	}
 }
 
@@ -4644,12 +4834,88 @@ func (x *WorkoutStepMsg) GetCustomTargetValueHigh() interface{} {
 	}
 }
 
+// GetSecondaryTargetValue returns the appropriate SecondaryTargetValue
+// subfield if a matching reference field/value combination is found.
+// If none of the reference field/value combinations are true
+// then the main field is returned.
+func (x *WorkoutStepMsg) GetSecondaryTargetValue() interface{} {
+	switch {
+	case x.TargetType == WktStepTargetSpeed:
+		return uint32(x.SecondaryTargetValue)
+	case x.TargetType == WktStepTargetHeartRate:
+		return uint32(x.SecondaryTargetValue)
+	case x.TargetType == WktStepTargetCadence:
+		return uint32(x.SecondaryTargetValue)
+	case x.TargetType == WktStepTargetPower:
+		return uint32(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilStepsCmplt:
+		return uint32(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilTime:
+		return float64(x.SecondaryTargetValue) / 1000
+	case x.DurationType == WktStepDurationRepeatUntilDistance:
+		return float64(x.SecondaryTargetValue) / 100
+	case x.DurationType == WktStepDurationRepeatUntilCalories:
+		return uint32(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilHrLessThan:
+		return WorkoutHr(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilHrGreaterThan:
+		return WorkoutHr(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilPowerLessThan:
+		return WorkoutPower(x.SecondaryTargetValue)
+	case x.DurationType == WktStepDurationRepeatUntilPowerGreaterThan:
+		return WorkoutPower(x.SecondaryTargetValue)
+	case x.TargetType == WktStepTargetSwimStroke:
+		return SwimStroke(x.SecondaryTargetValue)
+	default:
+		return x.SecondaryTargetValue
+	}
+}
+
+// GetSecondaryCustomTargetValueLow returns the appropriate SecondaryCustomTargetValueLow
+// subfield if a matching reference field/value combination is found.
+// If none of the reference field/value combinations are true
+// then the main field is returned.
+func (x *WorkoutStepMsg) GetSecondaryCustomTargetValueLow() interface{} {
+	switch x.TargetType {
+	case WktStepTargetSpeed:
+		return float64(x.SecondaryCustomTargetValueLow) / 1000
+	case WktStepTargetHeartRate:
+		return WorkoutHr(x.SecondaryCustomTargetValueLow)
+	case WktStepTargetCadence:
+		return uint32(x.SecondaryCustomTargetValueLow)
+	case WktStepTargetPower:
+		return WorkoutPower(x.SecondaryCustomTargetValueLow)
+	default:
+		return x.SecondaryCustomTargetValueLow
+	}
+}
+
+// GetSecondaryCustomTargetValueHigh returns the appropriate SecondaryCustomTargetValueHigh
+// subfield if a matching reference field/value combination is found.
+// If none of the reference field/value combinations are true
+// then the main field is returned.
+func (x *WorkoutStepMsg) GetSecondaryCustomTargetValueHigh() interface{} {
+	switch x.TargetType {
+	case WktStepTargetSpeed:
+		return float64(x.SecondaryCustomTargetValueHigh) / 1000
+	case WktStepTargetHeartRate:
+		return WorkoutHr(x.SecondaryCustomTargetValueHigh)
+	case WktStepTargetCadence:
+		return uint32(x.SecondaryCustomTargetValueHigh)
+	case WktStepTargetPower:
+		return WorkoutPower(x.SecondaryCustomTargetValueHigh)
+	default:
+		return x.SecondaryCustomTargetValueHigh
+	}
+}
+
 // ExerciseTitleMsg represents the exercise_title FIT message type.
 type ExerciseTitleMsg struct {
 	MessageIndex     MessageIndex
 	ExerciseCategory ExerciseCategory
 	ExerciseName     uint16
 	WktStepName      []string
+	DeveloperFields  map[string]DeveloperField
 }
 
 // NewExerciseTitleMsg returns a exercise_title FIT message
@@ -4660,31 +4926,34 @@ func NewExerciseTitleMsg() *ExerciseTitleMsg {
 		ExerciseCategory: 0xFFFF,
 		ExerciseName:     0xFFFF,
 		WktStepName:      nil,
+		DeveloperFields:  map[string]DeveloperField{},
 	}
 }
 
 // ScheduleMsg represents the schedule FIT message type.
 type ScheduleMsg struct {
-	Manufacturer  Manufacturer // Corresponds to file_id of scheduled workout / course.
-	Product       uint16       // Corresponds to file_id of scheduled workout / course.
-	SerialNumber  uint32       // Corresponds to file_id of scheduled workout / course.
-	TimeCreated   time.Time    // Corresponds to file_id of scheduled workout / course.
-	Completed     Bool         // TRUE if this activity has been started
-	Type          Schedule
-	ScheduledTime time.Time
+	Manufacturer    Manufacturer // Corresponds to file_id of scheduled workout / course.
+	Product         uint16       // Corresponds to file_id of scheduled workout / course.
+	SerialNumber    uint32       // Corresponds to file_id of scheduled workout / course.
+	TimeCreated     time.Time    // Corresponds to file_id of scheduled workout / course.
+	Completed       Bool         // TRUE if this activity has been started
+	Type            Schedule
+	ScheduledTime   time.Time
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewScheduleMsg returns a schedule FIT message
 // initialized to all-invalid values.
 func NewScheduleMsg() *ScheduleMsg {
 	return &ScheduleMsg{
-		Manufacturer:  0xFFFF,
-		Product:       0xFFFF,
-		SerialNumber:  0x00000000,
-		TimeCreated:   timeBase,
-		Completed:     0xFF,
-		Type:          0xFF,
-		ScheduledTime: timeBase,
+		Manufacturer:    0xFFFF,
+		Product:         0xFFFF,
+		SerialNumber:    0x00000000,
+		TimeCreated:     timeBase,
+		Completed:       0xFF,
+		Type:            0xFF,
+		ScheduledTime:   timeBase,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -4703,30 +4972,32 @@ func (x *ScheduleMsg) GetProduct() interface{} {
 
 // TotalsMsg represents the totals FIT message type.
 type TotalsMsg struct {
-	MessageIndex MessageIndex
-	Timestamp    time.Time
-	TimerTime    uint32 // Excludes pauses
-	Distance     uint32
-	Calories     uint32
-	Sport        Sport
-	ElapsedTime  uint32 // Includes pauses
-	Sessions     uint16
-	ActiveTime   uint32
+	MessageIndex    MessageIndex
+	Timestamp       time.Time
+	TimerTime       uint32 // Excludes pauses
+	Distance        uint32
+	Calories        uint32
+	Sport           Sport
+	ElapsedTime     uint32 // Includes pauses
+	Sessions        uint16
+	ActiveTime      uint32
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewTotalsMsg returns a totals FIT message
 // initialized to all-invalid values.
 func NewTotalsMsg() *TotalsMsg {
 	return &TotalsMsg{
-		MessageIndex: 0xFFFF,
-		Timestamp:    timeBase,
-		TimerTime:    0xFFFFFFFF,
-		Distance:     0xFFFFFFFF,
-		Calories:     0xFFFFFFFF,
-		Sport:        0xFF,
-		ElapsedTime:  0xFFFFFFFF,
-		Sessions:     0xFFFF,
-		ActiveTime:   0xFFFFFFFF,
+		MessageIndex:    0xFFFF,
+		Timestamp:       timeBase,
+		TimerTime:       0xFFFFFFFF,
+		Distance:        0xFFFFFFFF,
+		Calories:        0xFFFFFFFF,
+		Sport:           0xFF,
+		ElapsedTime:     0xFFFFFFFF,
+		Sessions:        0xFFFF,
+		ActiveTime:      0xFFFFFFFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -4744,7 +5015,8 @@ type WeightScaleMsg struct {
 	ActiveMet         uint16 // ~4kJ per kcal, 0.25 allows max 16384 kcal
 	MetabolicAge      uint8
 	VisceralFatRating uint8
-	UserProfileIndex  MessageIndex // Associates this weight scale message to a user.  This corresponds to the index of the user profile message in the weight scale file.
+	UserProfileIndex  MessageIndex // Associates this weight scale message to a user. This corresponds to the index of the user profile message in the weight scale file.
+	DeveloperFields   map[string]DeveloperField
 }
 
 // NewWeightScaleMsg returns a weight_scale FIT message
@@ -4764,6 +5036,7 @@ func NewWeightScaleMsg() *WeightScaleMsg {
 		MetabolicAge:      0xFF,
 		VisceralFatRating: 0xFF,
 		UserProfileIndex:  0xFFFF,
+		DeveloperFields:   map[string]DeveloperField{},
 	}
 }
 
@@ -4867,7 +5140,8 @@ type BloodPressureMsg struct {
 	HeartRate            uint8
 	HeartRateType        HrType
 	Status               BpStatus
-	UserProfileIndex     MessageIndex // Associates this blood pressure message to a user.  This corresponds to the index of the user profile message in the blood pressure file.
+	UserProfileIndex     MessageIndex // Associates this blood pressure message to a user. This corresponds to the index of the user profile message in the blood pressure file.
+	DeveloperFields      map[string]DeveloperField
 }
 
 // NewBloodPressureMsg returns a blood_pressure FIT message
@@ -4885,31 +5159,34 @@ func NewBloodPressureMsg() *BloodPressureMsg {
 		HeartRateType:        0xFF,
 		Status:               0xFF,
 		UserProfileIndex:     0xFFFF,
+		DeveloperFields:      map[string]DeveloperField{},
 	}
 }
 
 // MonitoringInfoMsg represents the monitoring_info FIT message type.
 type MonitoringInfoMsg struct {
-	Timestamp      time.Time
-	LocalTimestamp time.Time // Use to convert activity timestamps to local time if device does not support time zone and daylight savings time correction.
+	Timestamp       time.Time
+	LocalTimestamp  time.Time // Use to convert activity timestamps to local time if device does not support time zone and daylight savings time correction.
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMonitoringInfoMsg returns a monitoring_info FIT message
 // initialized to all-invalid values.
 func NewMonitoringInfoMsg() *MonitoringInfoMsg {
 	return &MonitoringInfoMsg{
-		Timestamp:      timeBase,
-		LocalTimestamp: timeBase,
+		Timestamp:       timeBase,
+		LocalTimestamp:  timeBase,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // MonitoringMsg represents the monitoring FIT message type.
 type MonitoringMsg struct {
 	Timestamp       time.Time   // Must align to logging interval, for example, time must be 00:00:00 for daily log.
-	DeviceIndex     DeviceIndex // Associates this data to device_info message.  Not required for file with single device (sensor).
-	Calories        uint16      // Accumulated total calories.  Maintained by MonitoringReader for each activity_type.  See SDK documentation
-	Distance        uint32      // Accumulated distance.  Maintained by MonitoringReader for each activity_type.  See SDK documentation.
-	Cycles          uint32      // Accumulated cycles.  Maintained by MonitoringReader for each activity_type.  See SDK documentation.
+	DeviceIndex     DeviceIndex // Associates this data to device_info message. Not required for file with single device (sensor).
+	Calories        uint16      // Accumulated total calories. Maintained by MonitoringReader for each activity_type. See SDK documentation
+	Distance        uint32      // Accumulated distance. Maintained by MonitoringReader for each activity_type. See SDK documentation.
+	Cycles          uint32      // Accumulated cycles. Maintained by MonitoringReader for each activity_type. See SDK documentation.
 	ActiveTime      uint32
 	ActivityType    ActivityType
 	ActivitySubtype ActivitySubtype
@@ -4917,6 +5194,7 @@ type MonitoringMsg struct {
 	Cycles16        uint16
 	ActiveTime16    uint16
 	LocalTimestamp  time.Time // Must align to logging interval, for example, time must be 00:00:00 for daily log.
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMonitoringMsg returns a monitoring FIT message
@@ -4935,6 +5213,7 @@ func NewMonitoringMsg() *MonitoringMsg {
 		Cycles16:        0xFFFF,
 		ActiveTime16:    0xFFFF,
 		LocalTimestamp:  timeBase,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -4992,6 +5271,7 @@ type HrMsg struct {
 	FilteredBpm         []uint8
 	EventTimestamp      []uint32
 	EventTimestamp12    []byte
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewHrMsg returns a hr FIT message
@@ -5004,6 +5284,7 @@ func NewHrMsg() *HrMsg {
 		FilteredBpm:         nil,
 		EventTimestamp:      nil,
 		EventTimestamp12:    nil,
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -5051,32 +5332,41 @@ func (x *HrMsg) expandComponents() {
 
 // StressLevelMsg represents the stress_level FIT message type.
 type StressLevelMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewStressLevelMsg returns a stress_level FIT message
 // initialized to all-invalid values.
 func NewStressLevelMsg() *StressLevelMsg {
-	return &StressLevelMsg{}
+	return &StressLevelMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // MemoGlobMsg represents the memo_glob FIT message type.
 type MemoGlobMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewMemoGlobMsg returns a memo_glob FIT message
 // initialized to all-invalid values.
 func NewMemoGlobMsg() *MemoGlobMsg {
-	return &MemoGlobMsg{}
+	return &MemoGlobMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // AntChannelIdMsg represents the ant_channel_id FIT message type.
 type AntChannelIdMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewAntChannelIdMsg returns a ant_channel_id FIT message
 // initialized to all-invalid values.
 func NewAntChannelIdMsg() *AntChannelIdMsg {
-	return &AntChannelIdMsg{}
+	return &AntChannelIdMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // AntRxMsg represents the ant_rx FIT message type.
@@ -5087,6 +5377,7 @@ type AntRxMsg struct {
 	MesgData            []byte
 	ChannelNumber       uint8
 	Data                []byte
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewAntRxMsg returns a ant_rx FIT message
@@ -5099,6 +5390,7 @@ func NewAntRxMsg() *AntRxMsg {
 		MesgData:            nil,
 		ChannelNumber:       0xFF,
 		Data:                nil,
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -5137,6 +5429,7 @@ type AntTxMsg struct {
 	MesgData            []byte
 	ChannelNumber       uint8
 	Data                []byte
+	DeveloperFields     map[string]DeveloperField
 }
 
 // NewAntTxMsg returns a ant_tx FIT message
@@ -5149,6 +5442,7 @@ func NewAntTxMsg() *AntTxMsg {
 		MesgData:            nil,
 		ChannelNumber:       0xFF,
 		Data:                nil,
+		DeveloperFields:     map[string]DeveloperField{},
 	}
 }
 
@@ -5181,43 +5475,47 @@ func (x *AntTxMsg) expandComponents() {
 
 // ExdScreenConfigurationMsg represents the exd_screen_configuration FIT message type.
 type ExdScreenConfigurationMsg struct {
-	ScreenIndex   uint8
-	FieldCount    uint8 // number of fields in screen
-	Layout        ExdLayout
-	ScreenEnabled Bool
+	ScreenIndex     uint8
+	FieldCount      uint8 // number of fields in screen
+	Layout          ExdLayout
+	ScreenEnabled   Bool
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewExdScreenConfigurationMsg returns a exd_screen_configuration FIT message
 // initialized to all-invalid values.
 func NewExdScreenConfigurationMsg() *ExdScreenConfigurationMsg {
 	return &ExdScreenConfigurationMsg{
-		ScreenIndex:   0xFF,
-		FieldCount:    0xFF,
-		Layout:        0xFF,
-		ScreenEnabled: 0xFF,
+		ScreenIndex:     0xFF,
+		FieldCount:      0xFF,
+		Layout:          0xFF,
+		ScreenEnabled:   0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
 // ExdDataFieldConfigurationMsg represents the exd_data_field_configuration FIT message type.
 type ExdDataFieldConfigurationMsg struct {
-	ScreenIndex  uint8
-	ConceptField byte
-	FieldId      uint8
-	ConceptCount uint8
-	DisplayType  ExdDisplayType
-	Title        []string
+	ScreenIndex     uint8
+	ConceptField    byte
+	FieldId         uint8
+	ConceptCount    uint8
+	DisplayType     ExdDisplayType
+	Title           []string
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewExdDataFieldConfigurationMsg returns a exd_data_field_configuration FIT message
 // initialized to all-invalid values.
 func NewExdDataFieldConfigurationMsg() *ExdDataFieldConfigurationMsg {
 	return &ExdDataFieldConfigurationMsg{
-		ScreenIndex:  0xFF,
-		ConceptField: 0xFF,
-		FieldId:      0xFF,
-		ConceptCount: 0xFF,
-		DisplayType:  0xFF,
-		Title:        nil,
+		ScreenIndex:     0xFF,
+		ConceptField:    0xFF,
+		FieldId:         0xFF,
+		ConceptCount:    0xFF,
+		DisplayType:     0xFF,
+		Title:           nil,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -5234,34 +5532,36 @@ func (x *ExdDataFieldConfigurationMsg) expandComponents() {
 
 // ExdDataConceptConfigurationMsg represents the exd_data_concept_configuration FIT message type.
 type ExdDataConceptConfigurationMsg struct {
-	ScreenIndex  uint8
-	ConceptField byte
-	FieldId      uint8
-	ConceptIndex uint8
-	DataPage     uint8
-	ConceptKey   uint8
-	Scaling      uint8
-	DataUnits    ExdDataUnits
-	Qualifier    ExdQualifiers
-	Descriptor   ExdDescriptors
-	IsSigned     Bool
+	ScreenIndex     uint8
+	ConceptField    byte
+	FieldId         uint8
+	ConceptIndex    uint8
+	DataPage        uint8
+	ConceptKey      uint8
+	Scaling         uint8
+	DataUnits       ExdDataUnits
+	Qualifier       ExdQualifiers
+	Descriptor      ExdDescriptors
+	IsSigned        Bool
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewExdDataConceptConfigurationMsg returns a exd_data_concept_configuration FIT message
 // initialized to all-invalid values.
 func NewExdDataConceptConfigurationMsg() *ExdDataConceptConfigurationMsg {
 	return &ExdDataConceptConfigurationMsg{
-		ScreenIndex:  0xFF,
-		ConceptField: 0xFF,
-		FieldId:      0xFF,
-		ConceptIndex: 0xFF,
-		DataPage:     0xFF,
-		ConceptKey:   0xFF,
-		Scaling:      0xFF,
-		DataUnits:    0xFF,
-		Qualifier:    0xFF,
-		Descriptor:   0xFF,
-		IsSigned:     0xFF,
+		ScreenIndex:     0xFF,
+		ConceptField:    0xFF,
+		FieldId:         0xFF,
+		ConceptIndex:    0xFF,
+		DataPage:        0xFF,
+		ConceptKey:      0xFF,
+		Scaling:         0xFF,
+		DataUnits:       0xFF,
+		Qualifier:       0xFF,
+		Descriptor:      0xFF,
+		IsSigned:        0xFF,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 
@@ -5278,24 +5578,29 @@ func (x *ExdDataConceptConfigurationMsg) expandComponents() {
 
 // DiveSummaryMsg represents the dive_summary FIT message type.
 type DiveSummaryMsg struct {
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewDiveSummaryMsg returns a dive_summary FIT message
 // initialized to all-invalid values.
 func NewDiveSummaryMsg() *DiveSummaryMsg {
-	return &DiveSummaryMsg{}
+	return &DiveSummaryMsg{
+		DeveloperFields: map[string]DeveloperField{},
+	}
 }
 
 // HrvMsg represents the hrv FIT message type.
 type HrvMsg struct {
-	Time []uint16 // Time between beats
+	Time            []uint16 // Time between beats
+	DeveloperFields map[string]DeveloperField
 }
 
 // NewHrvMsg returns a hrv FIT message
 // initialized to all-invalid values.
 func NewHrvMsg() *HrvMsg {
 	return &HrvMsg{
-		Time: nil,
+		Time:            nil,
+		DeveloperFields: map[string]DeveloperField{},
 	}
 }
 

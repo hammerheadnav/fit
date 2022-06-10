@@ -31,6 +31,8 @@ type decoder struct {
 	crc     dyncrc16.Hash16
 	tmp     [255 * 3]byte
 	defmsgs [maxLocalMesgs]*defmsg
+	// map of dev data index -> field def number -> field desc msg
+	fieldDescMsgs map[byte]map[byte]FieldDescriptionMsg
 
 	timestamp      uint32
 	lastTimeOffset int32
@@ -129,6 +131,7 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 	d.file = new(File)
 	d.file.Header = d.h
 	d.bytes.limit = int(d.h.DataSize)
+	d.fieldDescMsgs = map[byte]map[byte]FieldDescriptionMsg{}
 
 	if d.debug {
 		d.opts.logger.Println("header decoded:", d.h)
@@ -479,6 +482,9 @@ func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 			ddfd.size = d.tmp[(i*3)+1]
 			ddfd.devDataIndex = d.tmp[(i*3)+2]
 			dm.devDataFieldDescs[i] = ddfd
+			if d.debug {
+				d.opts.logger.Printf("parsed developer field description: %v", ddfd)
+			}
 		}
 
 	}
@@ -705,13 +711,105 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
 		}
+		fieldDescMap, ok := d.fieldDescMsgs[ddfd.devDataIndex]
+		if !ok {
+			if d.debug {
+				d.opts.logger.Printf("could not find dev field description for dev data index %d dev field #%d", ddfd.devDataIndex, ddfd.fieldNum)
+			}
+			continue
+		}
+		fieldDesc, ok := fieldDescMap[ddfd.fieldNum]
+		if !ok {
+			if d.debug {
+				d.opts.logger.Printf("could not find dev field description for dev field #%d, dm=%v", ddfd.fieldNum, dm)
+			}
+			continue
+		}
+		value, err := d.parseDevField(dm, fieldDesc, ddfd)
+		if err != nil {
+			return reflect.Value{}, err
+		}
+		var fieldName string
+		if len(fieldDesc.FieldName) > 0 {
+			fieldName = fieldDesc.FieldName[0]
+		} else {
+			fieldName = ""
+		}
+		var units string
+		if len(fieldDesc.Units) > 0 {
+			units = fieldDesc.Units[0]
+		} else {
+			units = ""
+		}
+
+		devField := DeveloperField{
+			DeveloperDataIndex:    fieldDesc.DeveloperDataIndex,
+			FieldDefinitionNumber: fieldDesc.FieldDefinitionNumber,
+			BaseTypeId:            fieldDesc.FitBaseTypeId,
+			FieldName:             fieldName,
+			Units:                 units,
+			Value:                 value,
+		}
+		devFieldsMap := msgv.FieldByName("DeveloperFields")
+		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
 	}
 
 	if knownMsg && !msgv.IsValid() {
 		panic("internal decoder error: parse data fields: known message, but not (reflect) valid")
 	}
 
+	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
+		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
+		fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
+		if fieldDescMap == nil {
+			fieldDescMap = map[byte]FieldDescriptionMsg{}
+		}
+		fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
+		d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
+	}
+
 	return msgv, nil
+}
+
+// unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
+// into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
+// so this is how it is.
+func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
+	dsize := int(devFieldDesc.size)
+	switch fieldDescMsg.FitBaseTypeId {
+	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
+		return uint64(d.tmp[0]), nil
+	case FitBaseTypeSint8:
+		return int64(d.tmp[0]), nil
+	case FitBaseTypeSint16:
+		return int64(dm.arch.Uint16(d.tmp[:dsize])), nil
+	case FitBaseTypeUint16, FitBaseTypeUint16z:
+		return uint64(dm.arch.Uint16(d.tmp[:dsize])), nil
+	case FitBaseTypeSint32:
+		return int64(dm.arch.Uint32(d.tmp[:dsize])), nil
+	case FitBaseTypeUint32, FitBaseTypeUint32z:
+		return uint64(dm.arch.Uint32(d.tmp[:dsize])), nil
+	case FitBaseTypeFloat32:
+		bits := dm.arch.Uint32(d.tmp[:dsize])
+		return float64(math.Float32frombits(bits)), nil
+	case FitBaseTypeFloat64:
+		bits := dm.arch.Uint64(d.tmp[:dsize])
+		return math.Float64frombits(bits), nil
+	case FitBaseTypeString:
+		for j := 0; j < dsize; j++ {
+			if d.tmp[j] == 0x00 {
+				if j > 0 {
+					return string(d.tmp[:j]), nil
+				}
+				break
+			}
+			if j == dsize-1 {
+				return string(d.tmp[:j]), nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
 }
 
 func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
