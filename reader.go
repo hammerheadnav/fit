@@ -751,9 +751,6 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		}
 		devFieldsMap := msgv.FieldByName("DeveloperFields")
 		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
-		if d.debug {
-			d.opts.logger.Printf("successfully parsed dev field %v", devField)
-		}
 	}
 
 	if knownMsg && !msgv.IsValid() {
@@ -763,9 +760,6 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
 		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
 		if d.fieldDescMsgs == nil {
-			if d.debug {
-				d.opts.logger.Printf("instantiatig new field desc msgs for defmsg=%v", dm)
-			}
 			d.fieldDescMsgs = map[byte]map[byte]FieldDescriptionMsg{}
 		}
 		fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
@@ -774,14 +768,14 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		}
 		fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
 		d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
-		if d.debug {
-			d.opts.logger.Printf("found field desc msg to save; msgs is now %v", d.fieldDescMsgs)
-		}
 	}
 
 	return msgv, nil
 }
 
+// unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
+// into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
+// so this is how it is.
 func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (reflect.Value, error) {
 	dsize := int(devFieldDesc.size)
 	switch fieldDescMsg.FitBaseTypeId {
