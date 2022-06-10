@@ -6,18 +6,8 @@ package fit
 
 import (
 	"math"
-	"reflect"
 	"time"
 )
-
-type DeveloperField struct {
-	DeveloperDataIndex    uint8
-	FieldDefinitionNumber uint8
-	BaseTypeId            uint8
-	FieldName             string
-	Units                 string
-	Value                 reflect.Value
-}
 
 // FileIdMsg represents the file_id FIT message type.
 type FileIdMsg struct {

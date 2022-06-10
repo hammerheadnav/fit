@@ -131,6 +131,7 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 	d.file = new(File)
 	d.file.Header = d.h
 	d.bytes.limit = int(d.h.DataSize)
+	d.fieldDescMsgs = map[byte]map[byte]FieldDescriptionMsg{}
 
 	if d.debug {
 		d.opts.logger.Println("header decoded:", d.h)
@@ -759,9 +760,6 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
 		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
-		if d.fieldDescMsgs == nil {
-			d.fieldDescMsgs = map[byte]map[byte]FieldDescriptionMsg{}
-		}
 		fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
 		if fieldDescMap == nil {
 			fieldDescMap = map[byte]FieldDescriptionMsg{}
