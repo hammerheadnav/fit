@@ -774,48 +774,42 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 // unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
 // into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
 // so this is how it is.
-func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (reflect.Value, error) {
+func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
 	dsize := int(devFieldDesc.size)
 	switch fieldDescMsg.FitBaseTypeId {
 	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
-		return reflect.ValueOf(uint64(d.tmp[0])), nil
+		return uint64(d.tmp[0]), nil
 	case FitBaseTypeSint8:
-		return reflect.ValueOf(int64(d.tmp[0])), nil
+		return int64(d.tmp[0]), nil
 	case FitBaseTypeSint16:
-		i16 := int64(dm.arch.Uint16(d.tmp[:dsize]))
-		return reflect.ValueOf(i16), nil
+		return int64(dm.arch.Uint16(d.tmp[:dsize])), nil
 	case FitBaseTypeUint16, FitBaseTypeUint16z:
-		u16 := uint64(dm.arch.Uint16(d.tmp[:dsize]))
-		return reflect.ValueOf(u16), nil
+		return uint64(dm.arch.Uint16(d.tmp[:dsize])), nil
 	case FitBaseTypeSint32:
-		i32 := int64(dm.arch.Uint32(d.tmp[:dsize]))
-		return reflect.ValueOf(i32), nil
+		return int64(dm.arch.Uint32(d.tmp[:dsize])), nil
 	case FitBaseTypeUint32, FitBaseTypeUint32z:
-		u32 := uint64(dm.arch.Uint32(d.tmp[:dsize]))
-		return reflect.ValueOf(u32), nil
+		return uint64(dm.arch.Uint32(d.tmp[:dsize])), nil
 	case FitBaseTypeFloat32:
 		bits := dm.arch.Uint32(d.tmp[:dsize])
-		f32 := float64(math.Float32frombits(bits))
-		return reflect.ValueOf(f32), nil
+		return float64(math.Float32frombits(bits)), nil
 	case FitBaseTypeFloat64:
 		bits := dm.arch.Uint64(d.tmp[:dsize])
-		f64 := math.Float64frombits(bits)
-		return reflect.ValueOf(f64), nil
+		return math.Float64frombits(bits), nil
 	case FitBaseTypeString:
 		for j := 0; j < dsize; j++ {
 			if d.tmp[j] == 0x00 {
 				if j > 0 {
-					return reflect.ValueOf(string(d.tmp[:j])), nil
+					return string(d.tmp[:j]), nil
 				}
 				break
 			}
 			if j == dsize-1 {
-				return reflect.ValueOf(string(d.tmp[:j])), nil
+				return string(d.tmp[:j]), nil
 			}
 		}
 	}
 
-	return reflect.Value{}, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
+	return nil, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
 }
 
 func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
