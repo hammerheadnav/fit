@@ -760,6 +760,9 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
 		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
 		if dm.fieldDescMsgs == nil {
+			if d.debug {
+				d.opts.logger.Printf("instantiatig new field desc msgs for defmsg=%v", dm)
+			}
 			dm.fieldDescMsgs = map[byte]FieldDescriptionMsg{}
 		}
 		dm.fieldDescMsgs[fieldMsg.FieldDefinitionNumber] = fieldMsg
