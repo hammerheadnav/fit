@@ -780,7 +780,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
 		d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
 		if d.debug {
-			d.opts.logger.Printf("found field desc msg to save; msgs is now %v", dm.fieldDescMsgs)
+			d.opts.logger.Printf("found field desc msg to save; msgs is now %v", d.fieldDescMsgs)
 		}
 	}
 
