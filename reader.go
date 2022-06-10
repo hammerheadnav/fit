@@ -31,6 +31,8 @@ type decoder struct {
 	crc     dyncrc16.Hash16
 	tmp     [255 * 3]byte
 	defmsgs [maxLocalMesgs]*defmsg
+	// map of dev data index -> field def number -> field desc msg
+	fieldDescMsgs map[byte]map[byte]FieldDescriptionMsg
 
 	timestamp      uint32
 	lastTimeOffset int32
@@ -321,7 +323,6 @@ type defmsg struct {
 	fields            byte
 	fieldDefs         []fieldDef
 	devDataFieldDescs []devDataFieldDesc
-	fieldDescMsgs     map[byte]FieldDescriptionMsg
 }
 
 func (dm defmsg) String() string {
@@ -709,7 +710,14 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
 		}
-		fieldDesc, ok := dm.fieldDescMsgs[ddfd.fieldNum]
+		fieldDescMap, ok := d.fieldDescMsgs[ddfd.devDataIndex]
+		if !ok {
+			if d.debug {
+				d.opts.logger.Printf("could not find dev field description for dev data index %d dev field #%d", ddfd.devDataIndex, ddfd.fieldNum)
+			}
+			continue
+		}
+		fieldDesc, ok := fieldDescMap[ddfd.fieldNum]
 		if !ok {
 			if d.debug {
 				d.opts.logger.Printf("could not find dev field description for dev field #%d, dm=%v", ddfd.fieldNum, dm)
@@ -759,13 +767,18 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
 		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
-		if dm.fieldDescMsgs == nil {
+		if d.fieldDescMsgs == nil {
 			if d.debug {
 				d.opts.logger.Printf("instantiatig new field desc msgs for defmsg=%v", dm)
 			}
-			dm.fieldDescMsgs = map[byte]FieldDescriptionMsg{}
+			d.fieldDescMsgs = map[byte]map[byte]FieldDescriptionMsg{}
 		}
-		dm.fieldDescMsgs[fieldMsg.FieldDefinitionNumber] = fieldMsg
+		fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
+		if fieldDescMap == nil {
+			fieldDescMap = map[byte]FieldDescriptionMsg{}
+		}
+		fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
+		d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
 		if d.debug {
 			d.opts.logger.Printf("found field desc msg to save; msgs is now %v", dm.fieldDescMsgs)
 		}
