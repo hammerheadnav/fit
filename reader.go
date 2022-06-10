@@ -712,7 +712,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		fieldDesc, ok := dm.fieldDescMsgs[ddfd.fieldNum]
 		if !ok {
 			if d.debug {
-				d.opts.logger.Printf("could not find dev field description for dev field #%d, dm=%v", dm)
+				d.opts.logger.Printf("could not find dev field description for dev field #%d, dm=%v", ddfd.fieldNum, dm)
 			}
 			continue
 		}
