@@ -724,40 +724,35 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			}
 			continue
 		}
-		if msgv.Type() == reflect.TypeOf(RecordMsg{}) {
-			recordMsg := msgv.Interface().(RecordMsg)
-			value, err := d.parseDevField(dm, fieldDesc, ddfd)
-			if err != nil {
-				return reflect.Value{}, err
-			}
-			var fieldName string
-			if len(fieldDesc.FieldName) > 0 {
-				fieldName = fieldDesc.FieldName[0]
-			} else {
-				fieldName = ""
-			}
-			var units string
-			if len(fieldDesc.Units) > 0 {
-				units = fieldDesc.Units[0]
-			} else {
-				units = ""
-			}
-
-			devField := DeveloperField{
-				DeveloperDataIndex:    fieldDesc.DeveloperDataIndex,
-				FieldDefinitionNumber: fieldDesc.FieldDefinitionNumber,
-				BaseTypeId:            uint8(fieldDesc.FitBaseTypeId),
-				FieldName:             fieldName,
-				Units:                 units,
-				Value:                 value,
-			}
-			recordMsg.DeveloperFields[fieldName] = devField
-			if d.debug {
-				d.opts.logger.Printf("successfully parsed dev field %v", devField)
-			}
+		value, err := d.parseDevField(dm, fieldDesc, ddfd)
+		if err != nil {
+			return reflect.Value{}, err
 		}
+		var fieldName string
+		if len(fieldDesc.FieldName) > 0 {
+			fieldName = fieldDesc.FieldName[0]
+		} else {
+			fieldName = ""
+		}
+		var units string
+		if len(fieldDesc.Units) > 0 {
+			units = fieldDesc.Units[0]
+		} else {
+			units = ""
+		}
+
+		devField := DeveloperField{
+			DeveloperDataIndex:    fieldDesc.DeveloperDataIndex,
+			FieldDefinitionNumber: fieldDesc.FieldDefinitionNumber,
+			BaseTypeId:            uint8(fieldDesc.FitBaseTypeId),
+			FieldName:             fieldName,
+			Units:                 units,
+			Value:                 value,
+		}
+		devFieldsMap := msgv.FieldByName("DeveloperFields")
+		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
 		if d.debug {
-			d.opts.logger.Printf("parsed data developer message field=%d definition=%v read bytes=%v", i, ddfd, d.tmp[0:int(ddfd.size)])
+			d.opts.logger.Printf("successfully parsed dev field %v", devField)
 		}
 	}
 
