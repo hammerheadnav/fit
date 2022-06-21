@@ -711,6 +711,11 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		if err != nil {
 			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
 		}
+		// if we don't know the message, skip trying to parse it into a concrete type as we would have
+		// nothing to put it in (resulting in a panic)
+		if !knownMsg {
+			continue
+		}
 		fieldDescMap, ok := d.fieldDescMsgs[ddfd.devDataIndex]
 		if !ok {
 			if d.debug {
