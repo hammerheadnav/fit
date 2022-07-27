@@ -174,17 +174,28 @@ func (d *Decoder) init(headerOnly, fileIDOnly, crcOnly bool) error {
 }
 
 func (d *Decoder) decode() error {
-	err := d.init(false, false, false)
+	err := d.Open()
 	if err != nil {
 		return err
 	}
 
-	err = d.decodeFileData()
-	if err != nil {
-		return err
+	for {
+		msg, err := d.DecodeNextMessage()
+		if err != nil {
+			return err
+		}
+		if msg == nil {
+			// finished parsing with no errors
+			break
+		}
+		d.file.add(msg)
 	}
 
 	return d.Close()
+}
+
+func (d *Decoder) Open() error {
+	return d.init(false, false, false)
 }
 
 func (d *Decoder) Close() error {
@@ -195,20 +206,6 @@ func (d *Decoder) Close() error {
 	}
 
 	return d.checkCRC()
-}
-
-func (d *Decoder) decodeFileData() error {
-	for {
-		msg, err := d.DecodeNextMessage()
-		if err != nil {
-			return err
-		}
-		if msg == nil {
-			// finished parsing with no errors
-			return nil
-		}
-		d.file.add(msg)
-	}
 }
 
 func (d *Decoder) DecodeNextMessage() (interface{}, error) {
