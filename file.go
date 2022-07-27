@@ -2,7 +2,6 @@ package fit
 
 import (
 	"fmt"
-	"reflect"
 )
 
 // File represents a decoded FIT file.
@@ -48,8 +47,10 @@ type File struct {
 	Messages []interface{}
 }
 
+type rawMsg interface{}
+
 type msgAdder interface {
-	add(reflect.Value)
+	add(interface{})
 }
 
 // NewFile creates a new File of the given type.
@@ -63,9 +64,8 @@ func NewFile(t FileType, h Header) (*File, error) {
 	return f, nil
 }
 
-func (f *File) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (f *File) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case FileIdMsg:
 		f.FileId = tmp
 	case FileCreatorMsg:

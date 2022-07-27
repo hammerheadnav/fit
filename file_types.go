@@ -1,7 +1,5 @@
 package fit
 
-import "reflect"
-
 // ActivityFile represents the Activity FIT file type.
 // Records sensor data and events from active sessions.
 type ActivityFile struct {
@@ -151,9 +149,8 @@ type expandableMsg interface {
 	expandComponents()
 }
 
-func (a *ActivityFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (a *ActivityFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case ActivityMsg:
 		a.Activity = &tmp
 	case SessionMsg:
@@ -174,9 +171,8 @@ func (a *ActivityFile) add(msg reflect.Value) {
 	}
 }
 
-func (d *DeviceFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (d *DeviceFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case SoftwareMsg:
 		d.Softwares = append(d.Softwares, &tmp)
 	case CapabilitiesMsg:
@@ -191,9 +187,8 @@ func (d *DeviceFile) add(msg reflect.Value) {
 	}
 }
 
-func (s *SettingsFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (s *SettingsFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case UserProfileMsg:
 		s.UserProfiles = append(s.UserProfiles, &tmp)
 	case HrmProfileMsg:
@@ -208,9 +203,8 @@ func (s *SettingsFile) add(msg reflect.Value) {
 	}
 }
 
-func (s *SportFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (s *SportFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case ZonesTargetMsg:
 		s.ZonesTarget = &tmp
 	case SportMsg:
@@ -229,9 +223,8 @@ func (s *SportFile) add(msg reflect.Value) {
 	}
 }
 
-func (w *WorkoutFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (w *WorkoutFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case WorkoutMsg:
 		w.Workout = &tmp
 	case WorkoutStepMsg:
@@ -240,9 +233,8 @@ func (w *WorkoutFile) add(msg reflect.Value) {
 	}
 }
 
-func (c *CourseFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (c *CourseFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case CourseMsg:
 		c.Course = &tmp
 	case LapMsg:
@@ -257,18 +249,16 @@ func (c *CourseFile) add(msg reflect.Value) {
 	}
 }
 
-func (s *SchedulesFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (s *SchedulesFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case ScheduleMsg:
 		s.Schedules = append(s.Schedules, &tmp)
 	default:
 	}
 }
 
-func (w *WeightFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (w *WeightFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case UserProfileMsg:
 		w.UserProfile = &tmp
 	case WeightScaleMsg:
@@ -279,27 +269,24 @@ func (w *WeightFile) add(msg reflect.Value) {
 	}
 }
 
-func (t *TotalsFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (t *TotalsFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case TotalsMsg:
 		t.Totals = append(t.Totals, &tmp)
 	default:
 	}
 }
 
-func (g *GoalsFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (g *GoalsFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case GoalMsg:
 		g.Goals = append(g.Goals, &tmp)
 	default:
 	}
 }
 
-func (b *BloodPressureFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (b *BloodPressureFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case UserProfileMsg:
 		b.UserProfile = &tmp
 	case BloodPressureMsg:
@@ -310,9 +297,8 @@ func (b *BloodPressureFile) add(msg reflect.Value) {
 	}
 }
 
-func (m *MonitoringAFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (m *MonitoringAFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case MonitoringInfoMsg:
 		m.MonitoringInfo = &tmp
 	case MonitoringMsg:
@@ -323,9 +309,8 @@ func (m *MonitoringAFile) add(msg reflect.Value) {
 	}
 }
 
-func (a *ActivitySummaryFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (a *ActivitySummaryFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case ActivityMsg:
 		a.Activity = &tmp
 	case SessionMsg:
@@ -336,9 +321,8 @@ func (a *ActivitySummaryFile) add(msg reflect.Value) {
 	}
 }
 
-func (m *MonitoringDailyFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (m *MonitoringDailyFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case MonitoringInfoMsg:
 		m.MonitoringInfo = &tmp
 	case MonitoringMsg:
@@ -347,9 +331,8 @@ func (m *MonitoringDailyFile) add(msg reflect.Value) {
 	}
 }
 
-func (m *MonitoringBFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (m *MonitoringBFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case MonitoringInfoMsg:
 		m.MonitoringInfo = &tmp
 	case MonitoringMsg:
@@ -360,9 +343,8 @@ func (m *MonitoringBFile) add(msg reflect.Value) {
 	}
 }
 
-func (s *SegmentFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (s *SegmentFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case SegmentIdMsg:
 		s.SegmentId = &tmp
 	case SegmentLeaderboardEntryMsg:
@@ -375,9 +357,8 @@ func (s *SegmentFile) add(msg reflect.Value) {
 	}
 }
 
-func (s *SegmentListFile) add(msg reflect.Value) {
-	x := msg.Interface()
-	switch tmp := x.(type) {
+func (s *SegmentListFile) add(msg interface{}) {
+	switch tmp := msg.(type) {
 	case SegmentFileMsg:
 		s.SegmentFiles = append(s.SegmentFiles, &tmp)
 	default:

@@ -204,8 +204,10 @@ func (d *Decoder) decodeFileData() error {
 			return err
 		}
 		if msg == nil {
+			// finished parsing with no errors
 			return nil
 		}
+		d.file.add(msg)
 	}
 }
 
@@ -214,7 +216,7 @@ func (d *Decoder) DecodeNextMessage() (interface{}, error) {
 		var (
 			b   byte
 			dm  *defmsg
-			msg reflect.Value
+			msg interface{}
 			err error
 		)
 
@@ -229,8 +231,7 @@ func (d *Decoder) DecodeNextMessage() (interface{}, error) {
 			if err != nil {
 				return nil, fmt.Errorf("parsing compressed timestamp message: %v", err)
 			}
-			if msg.IsValid() {
-				d.file.add(msg)
+			if msg != nil {
 				return msg, nil
 			}
 		case (b & mesgDefinitionMask) == mesgDefinitionMask:
@@ -244,8 +245,7 @@ func (d *Decoder) DecodeNextMessage() (interface{}, error) {
 			if err != nil {
 				return nil, fmt.Errorf("parsing data message: %v", err)
 			}
-			if msg.IsValid() {
-				d.file.add(msg)
+			if msg != nil {
 				return msg, nil
 			}
 		default:
@@ -412,7 +412,7 @@ func (d *Decoder) parseFileIdMsg() error {
 		return fmt.Errorf("error reading data message:  %v", err)
 	}
 
-	_, ok := msg.Interface().(FileIdMsg)
+	_, ok := msg.(FileIdMsg)
 	if !ok {
 		return errors.New("parsed message was not of type file_id")
 	}
@@ -608,7 +608,7 @@ func (d *Decoder) validateFieldDef(gmsgnum MesgNum, dfield fieldDef) error {
 	}
 }
 
-func (d *Decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.Value, error) {
+func (d *Decoder) parseDataMessage(recordHeader byte, compressed bool) (interface{}, error) {
 	var localMsgNum byte
 	if compressed {
 		localMsgNum = (recordHeader & compressedLocalMesgNumMask) >> 5
@@ -618,7 +618,7 @@ func (d *Decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.
 
 	dm := d.defmsgs[localMsgNum]
 	if dm == nil {
-		return reflect.Value{}, fmt.Errorf(
+		return nil, fmt.Errorf(
 			"missing data definition message for local message number %d",
 			localMsgNum)
 	}
@@ -668,7 +668,7 @@ func (d *Decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.
 	return d.parseDataFields(dm, knownMsg, msgv)
 }
 
-func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value) (reflect.Value, error) {
+func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value) (interface{}, error) {
 	for i, dfield := range dm.fieldDefs {
 		dsize := int(dfield.size)
 		padding := 0
@@ -684,7 +684,7 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 
 		err := d.readFull(d.tmp[0:dsize])
 		if err != nil {
-			return reflect.Value{}, fmt.Errorf(
+			return nil, fmt.Errorf(
 				"error parsing data message: %v (field %d [%v] for [%v])",
 				err, i, dfield, dm)
 		}
@@ -717,7 +717,7 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			if err == nil {
 				continue
 			}
-			return reflect.Value{}, fmt.Errorf("error parsing data message: %v", err)
+			return nil, fmt.Errorf("error parsing data message: %v", err)
 		case types.TimeUTC, types.TimeLocal:
 			d.parseTimeStamp(dm, fieldv, pfield)
 		case types.Lat:
@@ -736,7 +736,7 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	for i, ddfd := range dm.devDataFieldDescs {
 		err := d.readFull(d.tmp[0:int(ddfd.size)])
 		if err != nil {
-			return reflect.Value{}, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
+			return nil, fmt.Errorf("error parsing data developer message: %v (field %d [%v] for [%v])", err, i, ddfd, dm)
 		}
 		// if we don't know the message, skip trying to parse it into a concrete type as we would have
 		// nothing to put it in (resulting in a panic)
@@ -759,7 +759,7 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		}
 		value, err := d.parseDevField(dm, fieldDesc, ddfd)
 		if err != nil {
-			return reflect.Value{}, err
+			return nil, err
 		}
 		var fieldName string
 		if len(fieldDesc.FieldName) > 0 {
@@ -786,18 +786,13 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
 	}
 
-	if knownMsg && !msgv.IsValid() {
-		panic("internal decoder error: parse data fields: known message, but not (reflect) valid")
-	}
-
-	// post processng for valid messages
 	if msgv.IsValid() {
-		if expandable, ok := msgv.Interface().(expandableMsg); ok {
+		msg := msgv.Interface()
+		if expandable, ok := msg.(expandableMsg); ok {
 			expandable.expandComponents()
 		}
 
-		if msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
-			fieldMsg := msgv.Interface().(FieldDescriptionMsg)
+		if fieldMsg, ok := msg.(FieldDescriptionMsg); ok {
 			fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
 			if fieldDescMap == nil {
 				fieldDescMap = map[byte]FieldDescriptionMsg{}
@@ -805,9 +800,13 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
 			d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
 		}
+
+		return msg, nil
+	} else if knownMsg {
+		panic("internal decoder error: parse data fields: known message, but not (reflect) valid")
 	}
 
-	return msgv, nil
+	return nil, nil
 }
 
 // unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
