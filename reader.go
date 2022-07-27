@@ -174,7 +174,7 @@ func (d *Decoder) init(headerOnly, fileIDOnly, crcOnly bool) error {
 }
 
 func (d *Decoder) decode() error {
-	err := d.Open()
+	err := d.init(false, false, false)
 	if err != nil {
 		return err
 	}
@@ -194,8 +194,9 @@ func (d *Decoder) decode() error {
 	return d.Close()
 }
 
-func (d *Decoder) Open() error {
-	return d.init(false, false, false)
+func (d *Decoder) Open() (*File, error) {
+	err := d.init(false, false, false)
+	return d.file, err
 }
 
 func (d *Decoder) Close() error {
