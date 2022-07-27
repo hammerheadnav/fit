@@ -41,7 +41,7 @@ func NewHeader(v ProtocolVersion, crc bool) Header {
 	return h
 }
 
-func (d *decoder) decodeHeader() error {
+func (d *Decoder) decodeHeader() error {
 	err := binary.Read(d.r, le, &d.h.Size)
 	if err != nil {
 		if err == io.EOF {

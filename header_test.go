@@ -84,7 +84,7 @@ var decodeHeaderTests = []struct {
 
 func TestDecodeHeader(t *testing.T) {
 	for i, dht := range decodeHeaderTests {
-		var dec decoder
+		var dec Decoder
 		dec.r = bytes.NewReader(dht.in)
 		dec.crc = dyncrc16.New()
 		err := dec.decodeHeader()

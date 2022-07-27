@@ -19,7 +19,7 @@ var (
 	be = binary.BigEndian
 )
 
-type decoder struct {
+type Decoder struct {
 	r     io.Reader
 	bytes struct {
 		limit int
@@ -50,15 +50,15 @@ type decoder struct {
 // CheckIntegrity verifies the FIT header and file CRC. Only the header CRC is
 // verified if headerOnly is true.
 func CheckIntegrity(r io.Reader, headerOnly bool) error {
-	var d decoder
-	return d.decode(r, headerOnly, false, true)
+	d := NewDecoder(r)
+	return d.init(headerOnly, false, true)
 }
 
 // DecodeHeader returns the FIT file header without decoding the entire FIT
 // file.
 func DecodeHeader(r io.Reader) (Header, error) {
-	var d decoder
-	if err := d.decode(r, true, false, false); err != nil {
+	d := NewDecoder(r)
+	if err := d.init(true, false, false); err != nil {
 		return Header{}, err
 	}
 	return d.h, nil
@@ -68,22 +68,39 @@ func DecodeHeader(r io.Reader) (Header, error) {
 // decoding the entire FIT file. The FileId message must be present in all FIT
 // files.
 func DecodeHeaderAndFileID(r io.Reader) (Header, FileIdMsg, error) {
-	var d decoder
-	if err := d.decode(r, false, true, false); err != nil {
+	d := NewDecoder(r)
+	if err := d.init(false, true, false); err != nil {
 		return Header{}, FileIdMsg{}, err
 	}
 	return d.h, d.file.FileId, nil
 }
 
-// Decode reads a FIT file from r and returns it as a *File.
-// If error is non-nil, all data decoded before the error was
-// encountered is also returned.
-func Decode(r io.Reader, opts ...DecodeOption) (*File, error) {
-	var d decoder
+// Create a new decoder
+func NewDecoder(r io.Reader, opts ...DecodeOption) *Decoder {
+	var d Decoder
 	for _, opt := range opts {
 		opt(&d.opts)
 	}
-	err := d.decode(r, false, false, false)
+	if d.opts.logger != nil {
+		d.debug = true
+	}
+	if d.opts.unknownFields {
+		d.unknownFields = make(map[unknownField]int)
+	}
+	if d.opts.unknownMessages {
+		d.unknownMessages = make(map[MesgNum]int)
+	}
+
+	d.r = r
+	d.crc = dyncrc16.New()
+	return &d
+}
+
+// Decode reads a FIT file from r and returns it as a *File.
+// If error is non-nil, all data decoded before the error was
+// encountered is also returned.
+func (d *Decoder) Decode() (*File, error) {
+	err := d.decode()
 	return d.file, err
 }
 
@@ -94,11 +111,8 @@ func DecodeChained(r io.Reader, opts ...DecodeOption) ([]*File, error) {
 	var fitFiles []*File
 	var i int
 	for {
-		var d decoder
-		for _, opt := range opts {
-			opt(&d.opts)
-		}
-		err := d.decode(r, false, false, false)
+		d := NewDecoder(r, opts...)
+		err := d.decode()
 		if err != nil {
 			if d.h.Size == 0 && i != 0 {
 				// Header not read, and not first file:
@@ -115,14 +129,7 @@ func DecodeChained(r io.Reader, opts ...DecodeOption) ([]*File, error) {
 	}
 }
 
-func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) error {
-	if d.opts.logger != nil {
-		d.debug = true
-	}
-
-	d.r = r
-	d.crc = dyncrc16.New()
-
+func (d *Decoder) init(headerOnly, fileIDOnly, crcOnly bool) error {
 	err := d.decodeHeader()
 	if err != nil {
 		return fmt.Errorf("error decoding header: %v", err)
@@ -149,15 +156,6 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 		return d.checkCRC()
 	}
 
-	if d.opts.unknownFields {
-		d.unknownFields = make(map[unknownField]int)
-		defer d.handleUnknownFields()
-	}
-	if d.opts.unknownMessages {
-		d.unknownMessages = make(map[MesgNum]int)
-		defer d.handleUnknownMessages()
-	}
-
 	err = d.parseFileIdMsg()
 	if err != nil {
 		return fmt.Errorf("error parsing file id message: %v", err)
@@ -166,7 +164,11 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 		return nil
 	}
 
-	err = d.file.init()
+	return d.file.init()
+}
+
+func (d *Decoder) decode() error {
+	err := d.init(false, false, false)
 	if err != nil {
 		return err
 	}
@@ -176,8 +178,12 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 		return err
 	}
 
+	return d.Close()
+}
+
+func (d *Decoder) Close() error {
 	// Check invariant pre-read CRC:
-	if !crcOnly && d.bytes.n != d.bytes.limit {
+	if d.bytes.n != d.bytes.limit {
 		fatalErr := fmt.Sprintf("internal decoder error: pre-crc check: data size limit is %d, but n is %d", d.bytes.limit, d.bytes.n)
 		panic(fatalErr)
 	}
@@ -185,7 +191,7 @@ func (d *decoder) decode(r io.Reader, headerOnly, fileIDOnly, crcOnly bool) erro
 	return d.checkCRC()
 }
 
-func (d *decoder) decodeFileData() error {
+func (d *Decoder) decodeFileData() error {
 	for d.bytes.n < d.bytes.limit {
 		var (
 			b   byte
@@ -230,7 +236,7 @@ func (d *decoder) decodeFileData() error {
 	return nil
 }
 
-func (d *decoder) checkCRC() error {
+func (d *Decoder) checkCRC() error {
 	if d.debug {
 		d.opts.logger.Printf("expecting crc value: 0x%x", d.crc.Sum16())
 	}
@@ -250,7 +256,7 @@ func (d *decoder) checkCRC() error {
 	return nil
 }
 
-func (d *decoder) fill() error {
+func (d *Decoder) fill() error {
 	if d.bytes.i != d.bytes.j {
 		panic("internal decoder error: fill called when unread bytes exist")
 	}
@@ -275,7 +281,7 @@ func (d *decoder) fill() error {
 	return err
 }
 
-func (d *decoder) readByte() (byte, error) {
+func (d *Decoder) readByte() (byte, error) {
 	for d.bytes.i == d.bytes.j {
 		if err := d.fill(); err != nil {
 			err = noEOF(err)
@@ -288,7 +294,7 @@ func (d *decoder) readByte() (byte, error) {
 	return x, nil
 }
 
-func (d *decoder) skipByte() error {
+func (d *Decoder) skipByte() error {
 	for d.bytes.i == d.bytes.j {
 		if err := d.fill(); err != nil {
 			err = noEOF(err)
@@ -300,7 +306,7 @@ func (d *decoder) skipByte() error {
 	return nil
 }
 
-func (d *decoder) readFull(p []byte) error {
+func (d *Decoder) readFull(p []byte) error {
 	for {
 		n := copy(p, d.bytes.buf[d.bytes.i:d.bytes.j])
 		p = p[n:]
@@ -353,7 +359,7 @@ func (ddfd devDataFieldDesc) String() string {
 	return fmt.Sprintf("field number: %d | size: %d | developer data index: %d", ddfd.fieldNum, ddfd.size, ddfd.devDataIndex)
 }
 
-func (d *decoder) parseFileIdMsg() error {
+func (d *Decoder) parseFileIdMsg() error {
 	b, err := d.readByte()
 	if err != nil {
 		return fmt.Errorf("error parsing record header: %v", err)
@@ -399,7 +405,7 @@ func (d *decoder) parseFileIdMsg() error {
 	return nil
 }
 
-func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
+func (d *Decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 	dm := defmsg{}
 	dm.localMsgType = recordHeader & localMesgNumMask
 	if dm.localMsgType > localMesgNumMask {
@@ -496,7 +502,7 @@ func (d *decoder) parseDefinitionMessage(recordHeader byte) (*defmsg, error) {
 	return &dm, nil
 }
 
-func (d *decoder) validateFieldDef(gmsgnum MesgNum, dfield fieldDef) error {
+func (d *Decoder) validateFieldDef(gmsgnum MesgNum, dfield fieldDef) error {
 	if !dfield.btype.Known() {
 		return fmt.Errorf("field %d: unknown base type: %v", dfield.num, dfield.btype)
 	}
@@ -581,7 +587,7 @@ func (d *decoder) validateFieldDef(gmsgnum MesgNum, dfield fieldDef) error {
 	}
 }
 
-func (d *decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.Value, error) {
+func (d *Decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.Value, error) {
 	var localMsgNum byte
 	if compressed {
 		localMsgNum = (recordHeader & compressedLocalMesgNumMask) >> 5
@@ -641,7 +647,7 @@ func (d *decoder) parseDataMessage(recordHeader byte, compressed bool) (reflect.
 	return d.parseDataFields(dm, knownMsg, msgv)
 }
 
-func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value) (reflect.Value, error) {
+func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value) (reflect.Value, error) {
 	for i, dfield := range dm.fieldDefs {
 		dsize := int(dfield.size)
 		padding := 0
@@ -779,7 +785,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 // unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
 // into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
 // so this is how it is.
-func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
+func (d *Decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
 	dsize := int(devFieldDesc.size)
 	switch fieldDescMsg.FitBaseTypeId {
 	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
@@ -817,7 +823,7 @@ func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, de
 	return nil, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
 }
 
-func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
+func (d *Decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
 	dsize := int(dfield.size)
 	switch dfield.btype {
 	case types.BaseByte, types.BaseEnum, types.BaseUint8, types.BaseUint8z:
@@ -865,7 +871,7 @@ func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Valu
 	return nil
 }
 
-func (d *decoder) parseFitFieldArray(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
+func (d *Decoder) parseFitFieldArray(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
 	dbt := dfield.btype
 	dsize := int(dfield.size)
 
@@ -963,7 +969,7 @@ func (d *decoder) parseFitFieldArray(dm *defmsg, dfield fieldDef, fieldv reflect
 	return nil
 }
 
-func (d *decoder) parseTimeStamp(dm *defmsg, fieldv reflect.Value, pfield *field) {
+func (d *Decoder) parseTimeStamp(dm *defmsg, fieldv reflect.Value, pfield *field) {
 	u32 := dm.arch.Uint32(d.tmp[:types.BaseUint32.Size()])
 	if u32 == 0xFFFFFFFF {
 		return
@@ -1015,25 +1021,31 @@ func noEOF(err error) error {
 	return err
 }
 
-func (d *decoder) handleUnknownFields() {
-	d.file.UnknownFields = make([]UnknownField, 0, len(d.unknownFields))
+// UnknownFields is a slice of unknown fields for known messages
+// encountered during decoding. It is sorted by message number.
+func (d *Decoder) UnknownFields() []UnknownField {
+	unknownFields := make([]UnknownField, 0, len(d.unknownFields))
 	for field, count := range d.unknownFields {
-		d.file.UnknownFields = append(d.file.UnknownFields, UnknownField{
+		unknownFields = append(unknownFields, UnknownField{
 			MesgNum:  field.mesgNum,
 			FieldNum: field.fieldNum,
 			Count:    count,
 		})
 	}
-	sort.Sort(unknownFieldSlice(d.file.UnknownFields))
+	sort.Sort(unknownFieldSlice(unknownFields))
+	return unknownFields
 }
 
-func (d *decoder) handleUnknownMessages() {
-	d.file.UnknownMessages = make([]UnknownMessage, 0, len(d.unknownMessages))
+// UnknownMessages is a slice of unknown messages encountered during
+// decoding. It is sorted by message number.
+func (d *Decoder) UnknownMessages() []UnknownMessage {
+	unknownMessages := make([]UnknownMessage, 0, len(d.unknownMessages))
 	for mesgNum, count := range d.unknownMessages {
-		d.file.UnknownMessages = append(d.file.UnknownMessages, UnknownMessage{
+		unknownMessages = append(unknownMessages, UnknownMessage{
 			MesgNum: mesgNum,
 			Count:   count,
 		})
 	}
-	sort.Sort(unknownMessageSlice(d.file.UnknownMessages))
+	sort.Sort(unknownMessageSlice(unknownMessages))
+	return unknownMessages
 }

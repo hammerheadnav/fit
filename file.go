@@ -24,14 +24,6 @@ type File struct {
 	fieldDescriptionMsgs []*FieldDescriptionMsg
 	developerDataIdMsgs  []*DeveloperDataIdMsg
 
-	// UnknownMessages is a slice of unknown messages encountered during
-	// decoding. It is sorted by message number.
-	UnknownMessages []UnknownMessage
-
-	// UnknownFields is a slice of unknown fields for known messages
-	// encountered during decoding. It is sorted by message number.
-	UnknownFields []UnknownField
-
 	msgAdder msgAdder
 
 	activity        *ActivityFile
@@ -51,6 +43,9 @@ type File struct {
 	monitoringB     *MonitoringBFile
 	segment         *SegmentFile
 	segmentList     *SegmentListFile
+
+	// Ordered list of all messages
+	Messages []interface{}
 }
 
 type msgAdder interface {
