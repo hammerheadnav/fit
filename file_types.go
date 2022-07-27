@@ -146,24 +146,25 @@ type SegmentListFile struct {
 	SegmentFiles []*SegmentFileMsg
 }
 
+// expandableMessages have some post-processing outside of raw values
+type expandableMsg interface {
+	expandComponents()
+}
+
 func (a *ActivityFile) add(msg reflect.Value) {
 	x := msg.Interface()
 	switch tmp := x.(type) {
 	case ActivityMsg:
 		a.Activity = &tmp
 	case SessionMsg:
-		tmp.expandComponents()
 		a.Sessions = append(a.Sessions, &tmp)
 	case LapMsg:
-		tmp.expandComponents()
 		a.Laps = append(a.Laps, &tmp)
 	case LengthMsg:
 		a.Lengths = append(a.Lengths, &tmp)
 	case RecordMsg:
-		tmp.expandComponents()
 		a.Records = append(a.Records, &tmp)
 	case EventMsg:
-		tmp.expandComponents()
 		a.Events = append(a.Events, &tmp)
 	case HrvMsg:
 		a.Hrvs = append(a.Hrvs, &tmp)
@@ -245,15 +246,12 @@ func (c *CourseFile) add(msg reflect.Value) {
 	case CourseMsg:
 		c.Course = &tmp
 	case LapMsg:
-		tmp.expandComponents()
 		c.Laps = append(c.Laps, &tmp)
 	case CoursePointMsg:
 		c.CoursePoints = append(c.CoursePoints, &tmp)
 	case RecordMsg:
-		tmp.expandComponents()
 		c.Records = append(c.Records, &tmp)
 	case EventMsg:
-		tmp.expandComponents()
 		c.Events = append(c.Events, &tmp)
 	default:
 	}
@@ -331,10 +329,8 @@ func (a *ActivitySummaryFile) add(msg reflect.Value) {
 	case ActivityMsg:
 		a.Activity = &tmp
 	case SessionMsg:
-		tmp.expandComponents()
 		a.Sessions = append(a.Sessions, &tmp)
 	case LapMsg:
-		tmp.expandComponents()
 		a.Laps = append(a.Laps, &tmp)
 	default:
 	}

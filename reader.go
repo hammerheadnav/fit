@@ -104,6 +104,12 @@ func (d *Decoder) Decode() (*File, error) {
 	return d.file, err
 }
 
+func Decode(r io.Reader, opts ...DecodeOption) (*File, error) {
+	d := NewDecoder(r, opts...)
+	err := d.decode()
+	return d.file, err
+}
+
 // DecodeChained reads chained FIT files from r until an error is encountered
 // or no more data is available. If error is non-nil, all data decoded before
 // the error was encountered is also returned for the last file read.
@@ -192,6 +198,18 @@ func (d *Decoder) Close() error {
 }
 
 func (d *Decoder) decodeFileData() error {
+	for {
+		msg, err := d.DecodeNextMessage()
+		if err != nil {
+			return err
+		}
+		if msg == nil {
+			return nil
+		}
+	}
+}
+
+func (d *Decoder) DecodeNextMessage() (interface{}, error) {
 	for d.bytes.n < d.bytes.limit {
 		var (
 			b   byte
@@ -202,38 +220,41 @@ func (d *Decoder) decodeFileData() error {
 
 		b, err = d.readByte()
 		if err != nil {
-			return fmt.Errorf("error parsing record header: %v", err)
+			return nil, fmt.Errorf("error parsing record header: %v", err)
 		}
 
 		switch {
 		case (b & compressedHeaderMask) == compressedHeaderMask:
 			msg, err = d.parseDataMessage(b, true)
 			if err != nil {
-				return fmt.Errorf("parsing compressed timestamp message: %v", err)
+				return nil, fmt.Errorf("parsing compressed timestamp message: %v", err)
 			}
 			if msg.IsValid() {
 				d.file.add(msg)
+				return msg, nil
 			}
 		case (b & mesgDefinitionMask) == mesgDefinitionMask:
 			dm, err = d.parseDefinitionMessage(b)
 			if err != nil {
-				return fmt.Errorf("parsing definition message: %v", err)
+				return nil, fmt.Errorf("parsing definition message: %v", err)
 			}
 			d.defmsgs[dm.localMsgType] = dm
 		case (b & mesgDefinitionMask) == mesgHeaderMask:
 			msg, err = d.parseDataMessage(b, false)
 			if err != nil {
-				return fmt.Errorf("parsing data message: %v", err)
+				return nil, fmt.Errorf("parsing data message: %v", err)
 			}
 			if msg.IsValid() {
 				d.file.add(msg)
+				return msg, nil
 			}
 		default:
-			return fmt.Errorf("unknown record header, got: %#x", b)
+			return nil, fmt.Errorf("unknown record header, got: %#x", b)
 		}
 	}
 
-	return nil
+	// finished parsing, no message
+	return nil, nil
 }
 
 func (d *Decoder) checkCRC() error {
@@ -769,14 +790,21 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 		panic("internal decoder error: parse data fields: known message, but not (reflect) valid")
 	}
 
-	if msgv.IsValid() && msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
-		fieldMsg := msgv.Interface().(FieldDescriptionMsg)
-		fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
-		if fieldDescMap == nil {
-			fieldDescMap = map[byte]FieldDescriptionMsg{}
+	// post processng for valid messages
+	if msgv.IsValid() {
+		if expandable, ok := msgv.Interface().(expandableMsg); ok {
+			expandable.expandComponents()
 		}
-		fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
-		d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
+
+		if msgv.Type() == reflect.TypeOf(FieldDescriptionMsg{}) {
+			fieldMsg := msgv.Interface().(FieldDescriptionMsg)
+			fieldDescMap := d.fieldDescMsgs[fieldMsg.DeveloperDataIndex]
+			if fieldDescMap == nil {
+				fieldDescMap = map[byte]FieldDescriptionMsg{}
+			}
+			fieldDescMap[fieldMsg.FieldDefinitionNumber] = fieldMsg
+			d.fieldDescMsgs[fieldMsg.DeveloperDataIndex] = fieldDescMap
+		}
 	}
 
 	return msgv, nil
