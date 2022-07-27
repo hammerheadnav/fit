@@ -453,7 +453,7 @@ func TestGetEncodeMesgDef(t *testing.T) {
 
 	got := getEncodeMesgDef(reflect.ValueOf(mesg), 2)
 
-	if !got.Equals(def) {
+	if !reflect.DeepEqual(got, def) {
 		t.Errorf("Expected '%+v', got '%+v'", def, got)
 	}
 }

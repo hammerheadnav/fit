@@ -179,6 +179,9 @@ func getEncodeMesgDef(mesg reflect.Value, localMesgNum byte) *encodeMesgDef {
 			if skip {
 				continue
 			}
+		} else if fval.Kind() == reflect.Map {
+			// Don't encode any maps (dev fields)
+			continue
 		} else if fval.Interface() == allInvalid.Field(i).Interface() {
 			continue
 		}

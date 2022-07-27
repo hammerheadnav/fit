@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -264,13 +265,14 @@ func TestDecodeHeaderAndFileID(t *testing.T) {
 	tc := time.Unix(1439652761, 0)
 	tc = tc.UTC()
 	wantFileId := fit.FileIdMsg{
-		Type:         0x4,
-		Manufacturer: 0x1,
-		Product:      0x7af,
-		SerialNumber: 0xe762d9cf,
-		Number:       0xffff,
-		TimeCreated:  tc,
-		ProductName:  "",
+		Type:            0x4,
+		Manufacturer:    0x1,
+		Product:         0x7af,
+		SerialNumber:    0xe762d9cf,
+		Number:          0xffff,
+		TimeCreated:     tc,
+		ProductName:     "",
+		DeveloperFields: map[string]fit.DeveloperField{},
 	}
 
 	gotHeader, gotFileId, err := fit.DecodeHeaderAndFileID(bytes.NewReader(activitySmall()))
@@ -280,7 +282,7 @@ func TestDecodeHeaderAndFileID(t *testing.T) {
 	if gotHeader != wantHeader {
 		t.Errorf("%q:\ngot header:\n%#v\nwant header:\n%#v", activitySmallPath, gotHeader, wantHeader)
 	}
-	if gotFileId != wantFileId {
+	if !reflect.DeepEqual(gotFileId, wantFileId) {
 		t.Errorf("%q:\ngot FileIdMsg:\n%v\nwant FileIdMsg:\n%v", activitySmallPath, gotFileId, wantFileId)
 	}
 }
