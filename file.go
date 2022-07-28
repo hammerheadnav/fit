@@ -42,12 +42,7 @@ type File struct {
 	monitoringB     *MonitoringBFile
 	segment         *SegmentFile
 	segmentList     *SegmentListFile
-
-	// Ordered list of all messages
-	Messages []interface{}
 }
-
-type rawMsg interface{}
 
 type msgAdder interface {
 	add(interface{})

@@ -785,6 +785,7 @@ func (d *Decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	}
 
 	if msgv.IsValid() {
+		fmt.Println("what is the type ", msgv.Type(), msgv.Interface())
 		msg := msgv.Interface()
 		if expandable, ok := msg.(expandableMsg); ok {
 			expandable.expandComponents()
