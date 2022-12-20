@@ -1,6 +1,6 @@
 // Code generated using the program found in 'cmd/fitgen/main.go'. DO NOT EDIT.
 
-// SDK Version: 21.84
+// SDK Version: 21.94
 
 package fit
 
@@ -2627,6 +2627,9 @@ type RecordMsg struct {
 	DeviceIndex                   DeviceIndex
 	EnhancedSpeed                 uint32
 	EnhancedAltitude              uint32
+	EbikeTravelRange              uint16
+	EbikeAssistMode               uint8
+	EbikeAssistLevelPercent       uint8
 	DeveloperFields               map[string]DeveloperField
 }
 
@@ -2682,6 +2685,9 @@ func NewRecordMsg() *RecordMsg {
 		DeviceIndex:                   0xFF,
 		EnhancedSpeed:                 0xFFFFFFFF,
 		EnhancedAltitude:              0xFFFFFFFF,
+		EbikeTravelRange:              0xFFFF,
+		EbikeAssistMode:               0xFF,
+		EbikeAssistLevelPercent:       0xFF,
 		DeveloperFields:               map[string]DeveloperField{},
 	}
 }
@@ -4839,32 +4845,16 @@ func (x *WorkoutStepMsg) GetCustomTargetValueHigh() interface{} {
 // If none of the reference field/value combinations are true
 // then the main field is returned.
 func (x *WorkoutStepMsg) GetSecondaryTargetValue() interface{} {
-	switch {
-	case x.TargetType == WktStepTargetSpeed:
+	switch x.SecondaryTargetType {
+	case WktStepTargetSpeed:
 		return uint32(x.SecondaryTargetValue)
-	case x.TargetType == WktStepTargetHeartRate:
+	case WktStepTargetHeartRate:
 		return uint32(x.SecondaryTargetValue)
-	case x.TargetType == WktStepTargetCadence:
+	case WktStepTargetCadence:
 		return uint32(x.SecondaryTargetValue)
-	case x.TargetType == WktStepTargetPower:
+	case WktStepTargetPower:
 		return uint32(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilStepsCmplt:
-		return uint32(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilTime:
-		return float64(x.SecondaryTargetValue) / 1000
-	case x.DurationType == WktStepDurationRepeatUntilDistance:
-		return float64(x.SecondaryTargetValue) / 100
-	case x.DurationType == WktStepDurationRepeatUntilCalories:
-		return uint32(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilHrLessThan:
-		return WorkoutHr(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilHrGreaterThan:
-		return WorkoutHr(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilPowerLessThan:
-		return WorkoutPower(x.SecondaryTargetValue)
-	case x.DurationType == WktStepDurationRepeatUntilPowerGreaterThan:
-		return WorkoutPower(x.SecondaryTargetValue)
-	case x.TargetType == WktStepTargetSwimStroke:
+	case WktStepTargetSwimStroke:
 		return SwimStroke(x.SecondaryTargetValue)
 	default:
 		return x.SecondaryTargetValue
@@ -4876,7 +4866,7 @@ func (x *WorkoutStepMsg) GetSecondaryTargetValue() interface{} {
 // If none of the reference field/value combinations are true
 // then the main field is returned.
 func (x *WorkoutStepMsg) GetSecondaryCustomTargetValueLow() interface{} {
-	switch x.TargetType {
+	switch x.SecondaryTargetType {
 	case WktStepTargetSpeed:
 		return float64(x.SecondaryCustomTargetValueLow) / 1000
 	case WktStepTargetHeartRate:
@@ -4895,7 +4885,7 @@ func (x *WorkoutStepMsg) GetSecondaryCustomTargetValueLow() interface{} {
 // If none of the reference field/value combinations are true
 // then the main field is returned.
 func (x *WorkoutStepMsg) GetSecondaryCustomTargetValueHigh() interface{} {
-	switch x.TargetType {
+	switch x.SecondaryTargetType {
 	case WktStepTargetSpeed:
 		return float64(x.SecondaryCustomTargetValueHigh) / 1000
 	case WktStepTargetHeartRate:
