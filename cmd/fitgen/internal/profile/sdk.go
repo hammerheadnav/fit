@@ -18,6 +18,7 @@ var extraProductFields = map[string]bool{
 	"ebike_travel_range":         true,
 	"ebike_assist_mode":          true,
 	"ebike_assist_level_percent": true,
+	"ebike_battery_level":        true,
 }
 
 func knownMesgNumButNoMsg(sdk, mesgNum string) bool {

@@ -632,8 +632,9 @@ var _fields = [...][256]*field{
 		73:  {46, 73, types.Fit(6), 1},
 		78:  {47, 78, types.Fit(6), 1},
 		117: {48, 117, types.Fit(4), 1},
-		119: {49, 119, types.Fit(2), 1},
-		120: {50, 120, types.Fit(2), 1},
+		118: {49, 118, types.Fit(2), 1},
+		119: {50, 119, types.Fit(2), 1},
+		120: {51, 120, types.Fit(2), 1},
 	},
 
 	MesgNumEvent: {
