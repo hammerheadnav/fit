@@ -15,7 +15,6 @@ var knownMesgNumButNoMsgPerSDK = map[string]map[string]bool{
 
 var extraProductFields = map[string]bool{
 	"heart_rate_source_type":     true,
-	"ebike_travel_range":         true,
 	"ebike_assist_mode":          true,
 	"ebike_assist_level_percent": true,
 	"ebike_battery_level":        true,

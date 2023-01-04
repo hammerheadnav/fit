@@ -2627,7 +2627,6 @@ type RecordMsg struct {
 	DeviceIndex                   DeviceIndex
 	EnhancedSpeed                 uint32
 	EnhancedAltitude              uint32
-	EbikeTravelRange              uint16
 	EbikeBatteryLevel             uint8
 	EbikeAssistMode               uint8
 	EbikeAssistLevelPercent       uint8
@@ -2686,7 +2685,6 @@ func NewRecordMsg() *RecordMsg {
 		DeviceIndex:                   0xFF,
 		EnhancedSpeed:                 0xFFFFFFFF,
 		EnhancedAltitude:              0xFFFFFFFF,
-		EbikeTravelRange:              0xFFFF,
 		EbikeBatteryLevel:             0xFF,
 		EbikeAssistMode:               0xFF,
 		EbikeAssistLevelPercent:       0xFF,
