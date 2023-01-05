@@ -13,6 +13,13 @@ var knownMesgNumButNoMsgPerSDK = map[string]map[string]bool{
 	},
 }
 
+var extraProductFields = map[string]bool{
+	"heart_rate_source_type":     true,
+	"ebike_assist_mode":          true,
+	"ebike_assist_level_percent": true,
+	"ebike_battery_level":        true,
+}
+
 func knownMesgNumButNoMsg(sdk, mesgNum string) bool {
 	const fallbackSDK = "16.20"
 	mnMap, found := knownMesgNumButNoMsgPerSDK[sdk]

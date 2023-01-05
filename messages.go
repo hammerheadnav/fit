@@ -2627,6 +2627,9 @@ type RecordMsg struct {
 	DeviceIndex                   DeviceIndex
 	EnhancedSpeed                 uint32
 	EnhancedAltitude              uint32
+	EbikeBatteryLevel             uint8
+	EbikeAssistMode               uint8
+	EbikeAssistLevelPercent       uint8
 	DeveloperFields               map[string]DeveloperField
 }
 
@@ -2682,6 +2685,9 @@ func NewRecordMsg() *RecordMsg {
 		DeviceIndex:                   0xFF,
 		EnhancedSpeed:                 0xFFFFFFFF,
 		EnhancedAltitude:              0xFFFFFFFF,
+		EbikeBatteryLevel:             0xFF,
+		EbikeAssistMode:               0xFF,
+		EbikeAssistLevelPercent:       0xFF,
 		DeveloperFields:               map[string]DeveloperField{},
 	}
 }

@@ -162,7 +162,8 @@ func (f *Field) setLength() {
 
 func (f *Field) transform(subfield bool, ftypes map[string]*Type, handleHRSTQuirk bool, logger *log.Logger) (skip bool, err error) {
 	if f.data[mEXAMPLE] == "" || f.data[mEXAMPLE] == "0" {
-		if f.data[mFNAME] == "heart_rate_source_type" && handleHRSTQuirk {
+		_, ok := extraProductFields[f.data[mFNAME]]
+		if ok {
 			// Don't skip this specific field if we're instructed not to do so.
 			//
 			// Why? Originally spotted by @unusedbytes:
