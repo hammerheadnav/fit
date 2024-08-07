@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +24,11 @@ func main() {
 		-1,
 		"number of bytes to strip",
 	)
+	strip := flag.Bool(
+		"strip",
+		false,
+		"strip zeroes from end of file",
+	)
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: recoverer [flags] [path to fit file]\n")
@@ -41,16 +45,22 @@ func main() {
 	fitFile := flag.Arg(0)
 	fmt.Printf("flags %d %d %s\n", *start, *size, fitFile)
 
-	corrected, err := process(fitFile, *start, *size)
+	var corrected []byte
+	var err error
+
+	if *strip {
+		corrected, err = forceRepair(fitFile)
+	} else {
+		corrected, err = trimMiddle(fitFile, *start, *size)
+	}
 	if err != nil {
 		panic(err)
 	}
 
-	err = ioutil.WriteFile(newFileName(fitFile), corrected.Bytes(), 0644)
+	err = os.WriteFile(newFileName(fitFile), corrected, 0644)
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func newFileName(fileName string) string {
@@ -60,27 +70,26 @@ func newFileName(fileName string) string {
 	return filepath.Join(d, n+"-corrected"+e)
 }
 
-func process(fitFile string, start int, size int) (*bytes.Buffer, error) {
-	// read the file
-	raw, err := ioutil.ReadFile(fitFile)
+func readFile(fitFile string) (fit.Header, []byte, error) {
+	raw, err := os.ReadFile(fitFile)
 	if err != nil {
-		return nil, err
+		return fit.Header{}, nil, err
 	}
 
 	// read only the header
 	header, err := fit.DecodeHeader(bytes.NewReader(raw))
 	if err != nil {
-		return nil, err
+		return header, nil, err
 	}
 
-	// reconstruct the data portions
-	beginning := raw[header.Size:start]
-	end := raw[start+size : len(raw)-2]
-	combined := append(beginning, end...)
+	data := raw[header.Size:]
+	return header, data, nil
+}
 
-	// calculate the CRC
+func reconstructFile(header fit.Header, data []byte) ([]byte, error) {
+	// process crc
 	crc := dyncrc16.New()
-	header.DataSize = uint32(len(combined))
+	header.DataSize = uint32(len(data))
 	hdr, err := header.MarshalBinary()
 	if err != nil {
 		return nil, err
@@ -90,7 +99,7 @@ func process(fitFile string, start int, size int) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = crc.Write(combined)
+	_, err = crc.Write(data)
 	if err != nil {
 		return nil, err
 	}
@@ -101,10 +110,61 @@ func process(fitFile string, start int, size int) (*bytes.Buffer, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = buf.Write(combined)
+	_, err = buf.Write(data)
 	if err != nil {
 		return nil, err
 	}
 	err = binary.Write(buf, binary.LittleEndian, crc.Sum16())
-	return buf, err
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func forceRepair(fitFile string) ([]byte, error) {
+	header, data, err := readFile(fitFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// strip trailing zeroes
+	for data[len(data)-1] == 0x00 {
+		data = data[:len(data)-1]
+	}
+
+	// try 10 times
+	for i := 0; i < 10; i++ {
+		reconstructed, err := reconstructFile(header, data)
+		if err != nil {
+			// should not fail
+			return nil, err
+		}
+
+		// attempt to read
+		_, err = fit.Decode(bytes.NewReader(reconstructed))
+		if err != nil {
+			// remove last byte and try again
+			fmt.Println("fit file invalid, stripping more")
+			data = data[:len(data)-1]
+			continue
+		}
+		return reconstructed, nil
+	}
+
+	return nil, fmt.Errorf("failed to create a valid fit file")
+}
+
+func trimMiddle(fitFile string, start int, size int) ([]byte, error) {
+	header, data, err := readFile(fitFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// reconstruct the data portions
+	beginning := data[header.Size:start]
+	end := data[start+size : len(data)-2]
+	combined := append(beginning, end...)
+
+	return reconstructFile(header, combined)
 }
