@@ -825,14 +825,14 @@ func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, de
 	dsize := int(devFieldDesc.size)
 	btype := types.DecodeBase(byte(fieldDescMsg.FitBaseTypeId))
 	bsize := btype.Size()
+	count := dsize / bsize
 
 	val, err := parseFieldData(btype, d.tmp[:dsize], dm.arch)
 	// short circuit if only one value or string
-	if fieldDescMsg.FitBaseTypeId == FitBaseTypeString || dsize == bsize {
+	if fieldDescMsg.FitBaseTypeId == FitBaseTypeString || count == 1 {
 		return val, err
 	}
 
-	count := dsize / bsize
 	vals := reflect.MakeSlice(reflect.SliceOf(val.Type()), count, count)
 	vals.Index(0).Set(val)
 	for i := 1; i < count; i++ {
