@@ -753,7 +753,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			BaseTypeId:            fieldDesc.FitBaseTypeId,
 			FieldName:             fieldName,
 			Units:                 units,
-			value:                 value,
+			value:                 reflect.ValueOf(value),
 		}
 		devFieldsMap := msgv.FieldByName("DeveloperFields")
 		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
