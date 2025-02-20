@@ -753,7 +753,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			BaseTypeId:            fieldDesc.FitBaseTypeId,
 			FieldName:             fieldName,
 			Units:                 units,
-			value:                 reflect.ValueOf(value),
+			value:                 value,
 		}
 		devFieldsMap := msgv.FieldByName("DeveloperFields")
 		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
@@ -776,30 +776,31 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	return msgv, nil
 }
 
-func parseFieldData(baseType FitBaseType, bytes []byte, arch binary.ByteOrder) (interface{}, error) {
+func parseFieldData(baseType types.Base, bytes []byte, arch binary.ByteOrder) (reflect.Value, error) {
 	switch baseType {
-	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
-		return uint64(bytes[0]), nil
-	case FitBaseTypeSint8:
-		return int64(bytes[0]), nil
-	case FitBaseTypeSint16:
-		return int64(arch.Uint16(bytes)), nil
-	case FitBaseTypeUint16, FitBaseTypeUint16z:
-		return uint64(arch.Uint16(bytes)), nil
-	case FitBaseTypeSint32:
-		return int64(arch.Uint32(bytes)), nil
-	case FitBaseTypeUint32, FitBaseTypeUint32z:
-		return uint64(arch.Uint32(bytes)), nil
-	case FitBaseTypeFloat32:
+	case types.BaseByte, types.BaseEnum, types.BaseUint8, types.BaseUint8z:
+		return reflect.ValueOf(uint64(bytes[0])), nil
+	case types.BaseSint8:
+		return reflect.ValueOf(int64(bytes[0])), nil
+	case types.BaseSint16:
+		return reflect.ValueOf(int64(arch.Uint16(bytes))), nil
+	case types.BaseUint16, types.BaseUint16z:
+		return reflect.ValueOf(uint64(arch.Uint16(bytes))), nil
+	case types.BaseSint32:
+		return reflect.ValueOf(int64(arch.Uint32(bytes))), nil
+	case types.BaseUint32, types.BaseUint32z:
+		return reflect.ValueOf(uint64(arch.Uint32(bytes))), nil
+	case types.BaseFloat32:
 		bits := arch.Uint32(bytes)
-		return float64(math.Float32frombits(bits)), nil
-	case FitBaseTypeFloat64:
+		return reflect.ValueOf(float64(math.Float32frombits(bits))), nil
+	case types.BaseFloat64:
 		bits := arch.Uint64(bytes)
-		return math.Float64frombits(bits), nil
-	case FitBaseTypeString:
-		return parseFieldString(bytes), nil
+		return reflect.ValueOf(math.Float64frombits(bits)), nil
+	case types.BaseString:
+		return reflect.ValueOf(parseFieldString(bytes)), nil
+	default:
+		return reflect.Value{}, fmt.Errorf("unknown base type=%d", baseType)
 	}
-	return nil, fmt.Errorf("unknown base type=%d", baseType)
 }
 
 func parseFieldString(bytes []byte) string {
@@ -820,22 +821,28 @@ func parseFieldString(bytes []byte) string {
 // unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
 // into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
 // so this is how it is.
-func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
+func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (reflect.Value, error) {
 	dsize := int(devFieldDesc.size)
-	bsize := types.DecodeBase(byte(fieldDescMsg.FitBaseTypeId)).Size()
+	btype := types.DecodeBase(byte(fieldDescMsg.FitBaseTypeId))
+	bsize := btype.Size()
 
+	val, err := parseFieldData(btype, d.tmp[:dsize], dm.arch)
+	// short circuit if only one value or string
 	if fieldDescMsg.FitBaseTypeId == FitBaseTypeString || dsize == bsize {
-		return parseFieldData(fieldDescMsg.FitBaseTypeId, d.tmp[:dsize], dm.arch)
+		return val, err
 	}
 
-	vals := []interface{}{}
-	for offset := 0; offset+bsize <= dsize; offset += bsize {
-		val, err := parseFieldData(fieldDescMsg.FitBaseTypeId, d.tmp[offset:offset+bsize], dm.arch)
+	count := dsize / bsize
+	vals := reflect.MakeSlice(reflect.SliceOf(val.Type()), count, count)
+	vals.Index(0).Set(val)
+	for i := 1; i < count; i++ {
+		offset := i * bsize
+		val, err := parseFieldData(btype, d.tmp[offset:offset+bsize], dm.arch)
 		if err != nil {
-			return nil, err
+			return val, err
 		}
 
-		vals = append(vals, val)
+		vals.Index(i).Set(val)
 	}
 
 	return vals, nil
