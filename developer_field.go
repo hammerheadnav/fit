@@ -35,7 +35,7 @@ func getUint64(v reflect.Value) uint64 {
 		reflect.Uint64:
 		return v.Uint()
 	default:
-		return 0xFFFFFFFFFFFFFFFF
+		return math.MaxUint64
 	}
 }
 
@@ -68,7 +68,7 @@ func (f *DeveloperField) Uint64Slice() []uint64 {
 		}
 	default:
 		v := getUint64(f.value)
-		if v != 0xFFFFFFFFFFFFFFFF {
+		if v != math.MaxUint64 {
 			values = append(values, v)
 		}
 	}
