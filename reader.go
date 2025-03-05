@@ -753,7 +753,7 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 			BaseTypeId:            fieldDesc.FitBaseTypeId,
 			FieldName:             fieldName,
 			Units:                 units,
-			Value:                 value,
+			value:                 value,
 		}
 		devFieldsMap := msgv.FieldByName("DeveloperFields")
 		devFieldsMap.SetMapIndex(reflect.ValueOf(fieldName), reflect.ValueOf(devField))
@@ -776,45 +776,76 @@ func (d *decoder) parseDataFields(dm *defmsg, knownMsg bool, msgv reflect.Value)
 	return msgv, nil
 }
 
+func parseFieldData(baseType types.Base, bytes []byte, arch binary.ByteOrder) (reflect.Value, error) {
+	switch baseType {
+	case types.BaseByte, types.BaseEnum, types.BaseUint8, types.BaseUint8z:
+		return reflect.ValueOf(uint64(bytes[0])), nil
+	case types.BaseSint8:
+		return reflect.ValueOf(int64(bytes[0])), nil
+	case types.BaseSint16:
+		return reflect.ValueOf(int64(arch.Uint16(bytes))), nil
+	case types.BaseUint16, types.BaseUint16z:
+		return reflect.ValueOf(uint64(arch.Uint16(bytes))), nil
+	case types.BaseSint32:
+		return reflect.ValueOf(int64(arch.Uint32(bytes))), nil
+	case types.BaseUint32, types.BaseUint32z:
+		return reflect.ValueOf(uint64(arch.Uint32(bytes))), nil
+	case types.BaseFloat32:
+		bits := arch.Uint32(bytes)
+		return reflect.ValueOf(float64(math.Float32frombits(bits))), nil
+	case types.BaseFloat64:
+		bits := arch.Uint64(bytes)
+		return reflect.ValueOf(math.Float64frombits(bits)), nil
+	case types.BaseString:
+		return reflect.ValueOf(parseFieldString(bytes)), nil
+	default:
+		return reflect.Value{}, fmt.Errorf("unknown base type=%d", baseType)
+	}
+}
+
+func parseFieldString(bytes []byte) string {
+	for i := 0; i < len(bytes); i++ {
+		if bytes[i] == 0x00 {
+			if i > 0 {
+				return string(bytes[:i])
+			}
+			break
+		}
+		if i == len(bytes)-1 {
+			return string(bytes[:i])
+		}
+	}
+	return ""
+}
+
 // unfortunately largely duplicated with parseFitField(). however, in this case, we do not know the type to instantiate
 // into a reflect.Value until we switch on the base type (and the base type in the FieldDescriptionMsg is different),
 // so this is how it is.
-func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (interface{}, error) {
+func (d *decoder) parseDevField(dm *defmsg, fieldDescMsg FieldDescriptionMsg, devFieldDesc devDataFieldDesc) (reflect.Value, error) {
 	dsize := int(devFieldDesc.size)
-	switch fieldDescMsg.FitBaseTypeId {
-	case FitBaseTypeByte, FitBaseTypeEnum, FitBaseTypeUint8, FitBaseTypeUint8z:
-		return uint64(d.tmp[0]), nil
-	case FitBaseTypeSint8:
-		return int64(d.tmp[0]), nil
-	case FitBaseTypeSint16:
-		return int64(dm.arch.Uint16(d.tmp[:dsize])), nil
-	case FitBaseTypeUint16, FitBaseTypeUint16z:
-		return uint64(dm.arch.Uint16(d.tmp[:dsize])), nil
-	case FitBaseTypeSint32:
-		return int64(dm.arch.Uint32(d.tmp[:dsize])), nil
-	case FitBaseTypeUint32, FitBaseTypeUint32z:
-		return uint64(dm.arch.Uint32(d.tmp[:dsize])), nil
-	case FitBaseTypeFloat32:
-		bits := dm.arch.Uint32(d.tmp[:dsize])
-		return float64(math.Float32frombits(bits)), nil
-	case FitBaseTypeFloat64:
-		bits := dm.arch.Uint64(d.tmp[:dsize])
-		return math.Float64frombits(bits), nil
-	case FitBaseTypeString:
-		for j := 0; j < dsize; j++ {
-			if d.tmp[j] == 0x00 {
-				if j > 0 {
-					return string(d.tmp[:j]), nil
-				}
-				break
-			}
-			if j == dsize-1 {
-				return string(d.tmp[:j]), nil
-			}
-		}
+	btype := types.DecodeBase(byte(fieldDescMsg.FitBaseTypeId))
+	bsize := btype.Size()
+	count := dsize / bsize
+
+	val, err := parseFieldData(btype, d.tmp[:dsize], dm.arch)
+	// short circuit if only one value or string
+	if fieldDescMsg.FitBaseTypeId == FitBaseTypeString || count == 1 {
+		return val, err
 	}
 
-	return nil, fmt.Errorf("unknown base type for dev field description=%v", fieldDescMsg)
+	vals := reflect.MakeSlice(reflect.SliceOf(val.Type()), count, count)
+	vals.Index(0).Set(val)
+	for i := 1; i < count; i++ {
+		offset := i * bsize
+		val, err := parseFieldData(btype, d.tmp[offset:offset+bsize], dm.arch)
+		if err != nil {
+			return val, err
+		}
+
+		vals.Index(i).Set(val)
+	}
+
+	return vals, nil
 }
 
 func (d *decoder) parseFitField(dm *defmsg, dfield fieldDef, fieldv reflect.Value) error {
